@@ -1,0 +1,18 @@
+language: python
+cache: pip
+
+script: tox
+
+matrix:
+  include:
+
+    - python: "3.10"
+      env: TOXENV=py310
+
+    # Linters
+
+    - python: "3.10"
+      env: TOXENV=linting
+
+notifications:
+  email: false
