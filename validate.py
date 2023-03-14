@@ -31,8 +31,7 @@ class Validator(object):
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
         # TODO will need better instantiation here which passes credentials
-        self.eventbridge = boto3.client('events')
-        self.s3 = boto3.client('s3')
+        self.s3 = boto3.client('s3', region='us-east-1')
         self.transfer_config = boto3.s3.transfer.TransferConfig(
             multipart_threshold=1024 * 25,
             max_concurrency=10,
