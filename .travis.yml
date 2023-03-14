@@ -2,6 +2,9 @@ dist: bionic
 language: python
 cache: pip
 
+before_script:
+  - pip install tox
+
 script: tox
 
 matrix:
