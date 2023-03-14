@@ -4,9 +4,11 @@
 #
 #    pip-compile
 #
-boto3==1.26.87
+bagit==1.8.1
     # via -r requirements.in
-botocore==1.29.87
+boto3==1.26.90
+    # via -r requirements.in
+botocore==1.29.90
     # via
     #   boto3
     #   s3transfer
@@ -20,5 +22,5 @@ s3transfer==0.6.0
     # via boto3
 six==1.16.0
     # via python-dateutil
-urllib3==1.26.14
+urllib3==1.26.15
     # via botocore
