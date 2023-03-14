@@ -30,8 +30,11 @@ class Validator(object):
         self.source_filename = source_filename
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
-        # TODO will need better instantiation here which passes credentials
-        self.s3 = boto3.client('s3', region_name='us-east-1')
+        self.s3 = boto3.client(
+            's3',
+            region_name=os.environ.get('AWS_REGION_NAME', 'us-east-1'),
+            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.environ.get('AWS_ACCESS_KEY_ID'))
         self.transfer_config = boto3.s3.transfer.TransferConfig(
             multipart_threshold=1024 * 25,
             max_concurrency=10,
