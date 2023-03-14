@@ -1,3 +1,4 @@
+import json
 import random
 from pathlib import Path
 from shutil import copyfile, copytree, rmtree
@@ -6,7 +7,8 @@ from unittest.mock import patch
 import bagit
 import boto3
 import pytest
-from moto import mock_s3
+from moto import mock_s3, mock_sns, mock_sqs
+from moto.core import DEFAULT_ACCOUNT_ID
 
 from validate import AssetValidationError, Validator
 
@@ -15,7 +17,8 @@ DEFAULT_ARGS = [
     'foo',
     'bar',
     'b90862f3baceaae3b7418c78f9d50d52.tar.gz',
-    'tmp']
+    'tmp',
+    'topic']
 
 
 @pytest.fixture(autouse=True)
@@ -130,7 +133,8 @@ def test_validate_assets():
                          'foo',
                          'bar',
                          '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                         'tmp']
+                         'tmp',
+                         'topic']
     for args in [DEFAULT_ARGS, moving_image_args]:
         validator = Validator(*args)
         fixture_path = Path("fixtures", validator.refid)
@@ -145,7 +149,8 @@ def test_validate_assets_missing_file():
                          'foo',
                          'bar',
                          '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                         'tmp']
+                         'tmp',
+                         'topic']
     for args in [DEFAULT_ARGS, moving_image_args]:
         validator = Validator(*args)
         fixture_path = Path("fixtures", validator.refid)
@@ -228,11 +233,58 @@ def test_cleanup_failed_job():
     assert len(deleted) == 0
 
 
+@mock_sns
+@mock_sqs
 def test_deliver_success_notification():
-    pass
-    # TODO check on notification values
+    sns = boto3.client('sns', region_name='us-east-1')
+    topic_arn = sns.create_topic(Name='my-topic')['TopicArn']
+    sqs_conn = boto3.resource("sqs", region_name="us-east-1")
+    sqs_conn.create_queue(QueueName="test-queue")
+    sns.subscribe(
+        TopicArn=topic_arn,
+        Protocol="sqs",
+        Endpoint=f"arn:aws:sqs:us-east-1:{DEFAULT_ACCOUNT_ID}:test-queue",
+    )
+
+    default_args = DEFAULT_ARGS
+    default_args[-1] = topic_arn
+    validator = Validator(*default_args)
+
+    validator.deliver_success_notification()
+
+    queue = sqs_conn.get_queue_by_name(QueueName="test-queue")
+    messages = queue.receive_messages(MaxNumberOfMessages=1)
+    message_body = json.loads(messages[0].body)
+    assert message_body['MessageAttributes']['format']['Value'] == validator.format
+    assert message_body['MessageAttributes']['outcome']['Value'] == 'VALID'
+    assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
 
 
+@mock_sns
+@mock_sqs
 def test_deliver_failure_notification():
-    pass
-    # TODO check on notification values
+    sns = boto3.client('sns', region_name='us-east-1')
+    topic_arn = sns.create_topic(Name='my-topic')['TopicArn']
+    sqs_conn = boto3.resource("sqs", region_name="us-east-1")
+    sqs_conn.create_queue(QueueName="test-queue")
+    sns.subscribe(
+        TopicArn=topic_arn,
+        Protocol="sqs",
+        Endpoint=f"arn:aws:sqs:us-east-1:{DEFAULT_ACCOUNT_ID}:test-queue",
+    )
+
+    default_args = DEFAULT_ARGS
+    default_args[-1] = topic_arn
+    validator = Validator(*default_args)
+    exception_message = "foo"
+    exception = Exception(exception_message)
+
+    validator.deliver_failure_notification(exception)
+
+    queue = sqs_conn.get_queue_by_name(QueueName="test-queue")
+    messages = queue.receive_messages(MaxNumberOfMessages=1)
+    message_body = json.loads(messages[0].body)
+    assert message_body['MessageAttributes']['format']['Value'] == validator.format
+    assert message_body['MessageAttributes']['outcome']['Value'] == 'INVALID'
+    assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
+    assert message_body['MessageAttributes']['message']['Value'] == exception_message

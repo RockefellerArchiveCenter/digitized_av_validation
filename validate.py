@@ -23,13 +23,19 @@ class Validator(object):
     """Validates digitized audio and moving image assets."""
 
     def __init__(self, format, source_bucket,
-                 destination_bucket, source_filename, tmp_dir):
+                 destination_bucket, source_filename, tmp_dir, sns_topic):
         self.format = format
         self.source_bucket = source_bucket
         self.destination_bucket = destination_bucket
         self.source_filename = source_filename
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
+        self.sns_topic = sns_topic
+        self.sns = boto3.client(
+            'sns',
+            region_name=os.environ.get('AWS_REGION_NAME', 'us-east-1'),
+            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.environ.get('AWS_ACCESS_KEY_ID'))
         self.s3 = boto3.client(
             's3',
             region_name=os.environ.get('AWS_REGION_NAME', 'us-east-1'),
@@ -150,24 +156,60 @@ class Validator(object):
 
     def deliver_success_notification(self):
         """Sends notifications after successful run."""
-        # TODO: figure out notifications approach.
-        pass
+        self.sns.publish(
+            TopicArn=self.sns_topic,  # TODO can this go in client instantiation?
+            Message=f'{self.format} package {self.source_filename} successfully validated',
+            MessageAttributes={
+                'format': {
+                    'DataType': 'String',
+                    'StringValue': self.format,
+                },
+                'refid': {
+                    'DataType': 'String',
+                    'StringValue': self.refid,
+                },
+                'outcome': {
+                    'DataType': 'String',
+                    'StringValue': 'VALID',
+                }
+            })
 
     def deliver_failure_notification(self, exception):
         """"Sends notifications when run fails."""
-        # TODO: figure out notifications approach.
-        pass
+        self.sns.publish(
+            TopicArn=self.sns_topic,  # TODO can this go in client instantiation?
+            Message=f'{self.format} package {self.source_filename} is invalid',
+            MessageAttributes={
+                'format': {
+                    'DataType': 'String',
+                    'StringValue': self.format,
+                },
+                'refid': {
+                    'DataType': 'String',
+                    'StringValue': self.refid,
+                },
+                'outcome': {
+                    'DataType': 'String',
+                    'StringValue': 'INVALID',
+                },
+                'message': {
+                    'DataType': 'String',
+                    'StringValue': str(exception),
+                }
+            })
 
 
 if __name__ == '__main__':
     format = os.environ.get('FORMAT')
-    source_bucket = os.environ.get('SOURCE_BUCKET')
-    destination_bucket = os.environ.get('DESTINATION_BUCKET')
+    source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
+    destination_bucket = os.environ.get('AWS_DESTINATION_BUCKET')
     source_filename = os.environ.get('SOURCE_FILENAME')
     tmp_dir = os.environ.get('TMP_DIR')
+    sns_topic = os.environ.get('AWS_SNS_TOPIC')
     Validator(
         format,
         source_bucket,
         destination_bucket,
         source_filename,
-        tmp_dir).run()
+        tmp_dir,
+        sns_topic).run()
