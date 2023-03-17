@@ -68,7 +68,11 @@ class Validator(object):
             self.deliver_failure_notification(e)
 
     def download_bag(self):
-        """Downloads a streaming file from S3."""
+        """Downloads a streaming file from S3.
+
+        Returns:
+            downloaded_path (pathlib.Path): path of the downloaded file.
+        """
         downloaded_path = Path(self.tmp_dir, self.source_filename)
         self.s3.download_file(
             self.source_bucket,
@@ -78,7 +82,11 @@ class Validator(object):
         return downloaded_path
 
     def extract_bag(self, file_path):
-        """Extracts the contents of a TAR file."""
+        """Extracts the contents of a TAR file.
+
+        Args:
+            file_path (pathlib.Path): path of compressed file to extract.
+        """
         try:
             tf = tarfile.open(file_path, "r:*")
             tf.extractall(self.tmp_dir)
@@ -90,13 +98,24 @@ class Validator(object):
     def validate_bag(self, bag_path):
         """Validates a bag.
 
-        Raises a bagit.BagValidationError with the error in the `details` property.
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag to validate.
+
+        Raises:
+            bagit.BagValidationError with the error in the `details` property.
         """
         bag = bagit.Bag(str(bag_path))
         bag.validate()
 
     def validate_assets(self, bag_path):
-        """Ensures that all expected files are present."""
+        """Ensures that all expected files are present.
+
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag containing assets.
+
+        Raises:
+            AssetValidationError if expected file is missing.
+        """
         suffix_map = [
             ("ma.wav", "Master"), ("a.mp3", "Access")] if self.format == 'audio' else [
             ("ma.mov", "Master"), ("me.mov", "Mezzanine"), ("a.mp4", "Access")]
@@ -107,11 +126,23 @@ class Validator(object):
                     f"{filetype} file {filename} missing.")
 
     def validate_file_formats(self, bag_path):
-        """Ensures that files pass MediaConch validation rules."""
+        """Ensures that files pass MediaConch validation rules.
+
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag containing assets.
+        """
         # validation_rules = {} if self.format == 'audio' else {}
         pass
 
     def get_content_type(self, extension):
+        """Returns mimetypes for known file extensions.
+
+        Args:
+            extension (string): file extension to match.
+
+        Returns:
+            format (string): mimetype of matched format.
+        """
         format_map = {
             ".mov": "video/quicktime",
             ".mp4": "video/mp4",
@@ -124,7 +155,11 @@ class Validator(object):
                 f"Unable to upload asset with unknown extension {extension}.")
 
     def move_to_destination(self, bag_path):
-        """"Uploads directory to destination S3 bucket."""
+        """"Uploads validated assets to destination S3 bucket.
+
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag containing assets.
+        """
         for path_obj in bag_path.glob('data/*'):
             self.s3.upload_file(
                 path_obj,
@@ -136,7 +171,12 @@ class Validator(object):
                 Config=self.transfer_config)
 
     def cleanup_successful_job(self, bag_path):
-        """Removes artifacts from successful job."""
+        """Removes artifacts after completion of successful job.
+
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag containing assets.
+        """
+        # TODO does it make sense to clean up as we go?
         if bag_path.is_dir():
             rmtree(bag_path)
         self.s3.delete_object(
@@ -144,7 +184,11 @@ class Validator(object):
             Key=self.source_filename)
 
     def cleanup_failed_job(self, bag_path):
-        """Removes artifacts from failed job."""
+        """Removes artifacts after failed job.
+
+        Args:
+            bag_path (pathlib.Path): path of bagit Bag containing assets.
+        """
         if bag_path.is_dir():
             rmtree(bag_path)
         to_delete = self.s3.list_objects_v2(
@@ -175,7 +219,7 @@ class Validator(object):
             })
 
     def deliver_failure_notification(self, exception):
-        """"Sends notifications when run fails."""
+        """"Sends notifications when run fails. """
         self.sns.publish(
             TopicArn=self.sns_topic,  # TODO can this go in client instantiation?
             Message=f'{self.format} package {self.source_filename} is invalid',
