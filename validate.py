@@ -147,7 +147,7 @@ class Validator(object):
         """Removes artifacts from failed job."""
         if bag_path.is_dir():
             rmtree(bag_path)
-        to_delete = self.s3.list_objects(
+        to_delete = self.s3.list_objects_v2(
             Bucket=self.destination_bucket,
             Prefix=self.refid).get('Contents', [])
         self.s3.delete_objects(
