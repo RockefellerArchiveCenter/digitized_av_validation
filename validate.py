@@ -201,7 +201,7 @@ class Validator(object):
     def deliver_success_notification(self):
         """Sends notifications after successful run."""
         self.sns.publish(
-            TopicArn=self.sns_topic,  # TODO can this go in client instantiation?
+            TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} successfully validated',
             MessageAttributes={
                 'format': {
@@ -219,9 +219,13 @@ class Validator(object):
             })
 
     def deliver_failure_notification(self, exception):
-        """"Sends notifications when run fails. """
+        """"Sends notifications when run fails.
+
+        Args:
+            exception (Exception): the exception that was thrown.
+        """
         self.sns.publish(
-            TopicArn=self.sns_topic,  # TODO can this go in client instantiation?
+            TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} is invalid',
             MessageAttributes={
                 'format': {
