@@ -212,9 +212,13 @@ class Validator(object):
                     'DataType': 'String',
                     'StringValue': self.refid,
                 },
+                'service': {
+                    'DataType': 'String',
+                    'StringValue': 'digitized_av_validation',
+                },
                 'outcome': {
                     'DataType': 'String',
-                    'StringValue': 'VALID',
+                    'StringValue': 'SUCCESS',
                 }
             })
 
@@ -236,9 +240,13 @@ class Validator(object):
                     'DataType': 'String',
                     'StringValue': self.refid,
                 },
+                'service': {
+                    'DataType': 'String',
+                    'StringValue': 'digitized_av_validation',
+                },
                 'outcome': {
                     'DataType': 'String',
-                    'StringValue': 'INVALID',
+                    'StringValue': 'FAILURE',
                 },
                 'message': {
                     'DataType': 'String',
