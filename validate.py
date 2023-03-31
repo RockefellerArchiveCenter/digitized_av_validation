@@ -46,7 +46,7 @@ class Validator(object):
             max_concurrency=10,
             multipart_chunksize=1024 * 25,
             use_threads=True)
-        if self.format not in ['audio', 'moving image']:
+        if self.format not in ['audio', 'video']:
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
             raise Exception(f"Directory {self.tmp_dir} does not exist.")

@@ -129,13 +129,13 @@ def test_validate_bag():
 
 
 def test_validate_assets():
-    moving_image_args = ['moving image',
-                         'foo',
-                         'bar',
-                         '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                         'tmp',
-                         'topic']
-    for args in [DEFAULT_ARGS, moving_image_args]:
+    video_args = ['video',
+                  'foo',
+                  'bar',
+                  '20f8da26e268418ead4aa2365f816a08.tar.gz',
+                  'tmp',
+                  'topic']
+    for args in [DEFAULT_ARGS, video_args]:
         validator = Validator(*args)
         fixture_path = Path("fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -145,13 +145,13 @@ def test_validate_assets():
 
 
 def test_validate_assets_missing_file():
-    moving_image_args = ['moving image',
-                         'foo',
-                         'bar',
-                         '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                         'tmp',
-                         'topic']
-    for args in [DEFAULT_ARGS, moving_image_args]:
+    video_args = ['video',
+                  'foo',
+                  'bar',
+                  '20f8da26e268418ead4aa2365f816a08.tar.gz',
+                  'tmp',
+                  'topic']
+    for args in [DEFAULT_ARGS, video_args]:
         validator = Validator(*args)
         fixture_path = Path("fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -256,7 +256,7 @@ def test_deliver_success_notification():
     messages = queue.receive_messages(MaxNumberOfMessages=1)
     message_body = json.loads(messages[0].body)
     assert message_body['MessageAttributes']['format']['Value'] == validator.format
-    assert message_body['MessageAttributes']['outcome']['Value'] == 'VALID'
+    assert message_body['MessageAttributes']['outcome']['Value'] == 'SUCCESS'
     assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
 
 
@@ -285,6 +285,6 @@ def test_deliver_failure_notification():
     messages = queue.receive_messages(MaxNumberOfMessages=1)
     message_body = json.loads(messages[0].body)
     assert message_body['MessageAttributes']['format']['Value'] == validator.format
-    assert message_body['MessageAttributes']['outcome']['Value'] == 'INVALID'
+    assert message_body['MessageAttributes']['outcome']['Value'] == 'FAILURE'
     assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
     assert message_body['MessageAttributes']['message']['Value'] == exception_message
