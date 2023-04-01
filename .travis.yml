@@ -1,22 +1,26 @@
 dist: bionic
 language: python
+python:
+  - "3.9"
 cache: pip
+env:
+  global:
+    - TIMESTAMP: $(date '+%Y%m%d%H%M%S')
 
 before_script:
   - pip install tox
 
 script: tox
 
-matrix:
-  include:
-
-    - python: "3.10"
-      env: TOXENV=py310
-
-    # Linters
-
-    - python: "3.10"
-      env: TOXENV=linting
+before_deploy:
+  - pip install awscli
+  - docker build -t ${DOCKER_REPO} .
+  - if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
+deploy:
+  provider: script
+  script: bash deploy_scripts/containers/push_image_to_ecr.sh
+  on:
+    branch: base
 
 notifications:
   email: false
