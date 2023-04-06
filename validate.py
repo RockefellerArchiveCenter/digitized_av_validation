@@ -118,7 +118,7 @@ class Validator(object):
         """
         suffix_map = [
             ("ma.wav", "Master"), ("a.mp3", "Access")] if self.format == 'audio' else [
-            ("ma.mov", "Master"), ("me.mov", "Mezzanine"), ("a.mp4", "Access")]
+            ("ma.mkv", "Master"), ("me.mov", "Mezzanine"), ("a.mp4", "Access")]
         for suffix, filetype in suffix_map:
             filename = f"{self.refid}_{suffix}"
             if not Path(bag_path, 'data', filename).is_file():
@@ -144,6 +144,7 @@ class Validator(object):
             format (string): mimetype of matched format.
         """
         format_map = {
+            ".mkv": "video/x-matroska",
             ".mov": "video/quicktime",
             ".mp4": "video/mp4",
             ".wav": "audio/x-wav",
@@ -176,7 +177,6 @@ class Validator(object):
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
-        # TODO does it make sense to clean up as we go?
         if bag_path.is_dir():
             rmtree(bag_path)
         self.s3.delete_object(
