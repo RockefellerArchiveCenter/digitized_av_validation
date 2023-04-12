@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tarfile
 from pathlib import Path
 from shutil import rmtree
@@ -131,8 +132,13 @@ class Validator(object):
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
-        # validation_rules = {} if self.format == 'audio' else {}
-        pass
+        for f in bag_path.glob('data/*'):
+            # TODO get policy
+            result = subprocess.call(['mediaconch', '-fs', f])
+            if result != 0:
+                error = subprocess.call(['mediaconch', f])
+                raise FileFormatValidationError(
+                    f"{str(f)} is not valid according to format policy: {error}")
 
     def get_content_type(self, extension):
         """Returns mimetypes for known file extensions.

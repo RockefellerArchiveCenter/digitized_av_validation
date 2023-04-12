@@ -10,7 +10,7 @@ import pytest
 from moto import mock_s3, mock_sns, mock_sqs
 from moto.core import DEFAULT_ACCOUNT_ID
 
-from validate import AssetValidationError, Validator
+from validate import AssetValidationError, FileFormatValidationError, Validator
 
 DEFAULT_ARGS = [
     'audio',
@@ -164,8 +164,21 @@ def test_validate_assets_missing_file():
             validator.validate_assets(tmp_path)
 
 
-def test_validate_file_formats():
-    pass
+@patch('validate.subprocess.call')
+def test_validate_file_formats(mock_subprocess):
+    validator = Validator(*DEFAULT_ARGS)
+    fixture_path = Path("fixtures", validator.refid)
+    tmp_path = Path(validator.tmp_dir, validator.refid)
+    copytree(fixture_path, tmp_path)
+
+    mock_subprocess.return_value = 0
+    validator.validate_file_formats(tmp_path)
+
+    error_string = "This is an error!"
+    mock_subprocess.side_effect = [1, error_string]
+    with pytest.raises(FileFormatValidationError):
+        error = validator.validate_file_formats(tmp_path)
+        assert error_string in error
 
 
 @mock_s3
