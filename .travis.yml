@@ -1,7 +1,7 @@
 dist: bionic
 language: python
 python:
-  - "3.9"
+  - "3.10"
 cache: pip
 env:
   global:
@@ -14,7 +14,7 @@ script: tox
 
 before_deploy:
   - pip install awscli
-  - docker build -t ${DOCKER_REPO} .
+  - docker build -t ${DOCKER_REPO} --target build .
   - if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
 deploy:
   provider: script
