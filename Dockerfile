@@ -6,7 +6,7 @@ RUN pip install -r requirements.txt
 COPY validate.py .
 
 FROM base as test
-COPY test_requirements.txt .coveragerc .
+COPY test_requirements.txt .coveragerc ./
 RUN pip install -r test_requirements.txt
 COPY fixtures fixtures
 COPY test_validate.py .
