@@ -51,7 +51,7 @@ class Validator(object):
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
             raise Exception(f"Directory {self.tmp_dir} does not exist.")
-        print(repr(self))
+        print(self.__dict__)
 
     def run(self):
         """Main method which calls all other logic."""
