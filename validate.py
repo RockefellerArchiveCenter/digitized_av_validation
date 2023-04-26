@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import tarfile
@@ -6,6 +7,8 @@ from shutil import rmtree
 
 import bagit
 import boto3
+
+logging.basicConfig(level=os.environ.get('LOGGING_LEVEL', logging.INFO))
 
 
 class ExtractError(Exception):
@@ -51,10 +54,12 @@ class Validator(object):
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
             raise Exception(f"Directory {self.tmp_dir} does not exist.")
-        print(self.__dict__)
+        logging.debug(self.__dict__)
 
     def run(self):
         """Main method which calls all other logic."""
+        logging.debug(
+            f'Validation process started for {self.format} package {self.refid}.')
         try:
             extracted = Path(self.tmp_dir, self.refid)
             downloaded = self.download_bag()
@@ -65,7 +70,10 @@ class Validator(object):
             self.move_to_destination(extracted)
             self.cleanup_binaries(extracted)
             self.deliver_success_notification()
+            logging.info(
+                f'{self.format} package {self.refid} successfully validated.')
         except Exception as e:
+            logging.error(e)
             self.cleanup_binaries(extracted)
             self.deliver_failure_notification(e)
 
@@ -81,7 +89,7 @@ class Validator(object):
             self.source_filename,
             downloaded_path,
             Config=self.transfer_config)
-        print(downloaded_path)
+        logging.debug(f'Package downloaded to {downloaded_path}.')
         return downloaded_path
 
     def extract_bag(self, file_path):
@@ -95,6 +103,7 @@ class Validator(object):
             tf.extractall(self.tmp_dir)
             tf.close()
             file_path.unlink()
+            logging.debug(f'Package {file_path} extracted to {self.tmp_dir}.')
         except Exception as e:
             raise ExtractError("Error extracting TAR file: {}".format(e))
 
@@ -107,11 +116,9 @@ class Validator(object):
         Raises:
             bagit.BagValidationError with the error in the `details` property.
         """
-        data_dir = Path(bag_path, 'data')
-        if data_dir.is_dir():
-            print(list(data_dir.iterdir()))
         bag = bagit.Bag(str(bag_path))
         bag.validate()
+        logging.debug(f'Bag {bag_path} validated.')
 
     def validate_assets(self, bag_path):
         """Ensures that all expected files are present.
@@ -130,6 +137,7 @@ class Validator(object):
             if not Path(bag_path, 'data', filename).is_file():
                 raise AssetValidationError(
                     f"{filetype} file {filename} missing.")
+        logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def validate_file_formats(self, bag_path):
         """Ensures that files pass MediaConch validation rules.
@@ -144,6 +152,7 @@ class Validator(object):
                 error = subprocess.call(['mediaconch', f])
                 raise FileFormatValidationError(
                     f"{str(f)} is not valid according to format policy: {error}")
+        logging.debug(f'All file formats in {bag_path} are valid.')
 
     def get_content_type(self, extension):
         """Returns mimetypes for known file extensions.
@@ -181,6 +190,8 @@ class Validator(object):
                     'ContentType': self.get_content_type(
                         path_obj.suffix)},
                 Config=self.transfer_config)
+        logging.debug(
+            f'All files in payload directory of {bag_path} moved to destination.')
 
     def cleanup_binaries(self, bag_path):
         """Removes binaries after completion of successful or failed job.
@@ -193,6 +204,7 @@ class Validator(object):
         self.s3.delete_object(
             Bucket=self.source_bucket,
             Key=self.source_filename)
+        logging.debug('Binaries cleaned up.')
 
     def deliver_success_notification(self):
         """Sends notifications after successful run."""
@@ -217,6 +229,7 @@ class Validator(object):
                     'StringValue': 'SUCCESS',
                 }
             })
+        logging.debug('Success notification sent.')
 
     def deliver_failure_notification(self, exception):
         """"Sends notifications when run fails.
@@ -249,6 +262,7 @@ class Validator(object):
                     'StringValue': str(exception),
                 }
             })
+        logging.debug('Failure notification sent.')
 
 
 if __name__ == '__main__':
@@ -258,6 +272,8 @@ if __name__ == '__main__':
     source_filename = os.environ.get('SOURCE_FILENAME')
     tmp_dir = os.environ.get('TMP_DIR')
     sns_topic = os.environ.get('AWS_SNS_TOPIC')
+    logging.debug(
+        f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_bucket: {destination_bucket}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
     Validator(
         format,
         source_bucket,
