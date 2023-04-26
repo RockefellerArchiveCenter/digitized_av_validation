@@ -51,6 +51,7 @@ class Validator(object):
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
             raise Exception(f"Directory {self.tmp_dir} does not exist.")
+        print(repr(self))
 
     def run(self):
         """Main method which calls all other logic."""
@@ -80,6 +81,7 @@ class Validator(object):
             self.source_filename,
             downloaded_path,
             Config=self.transfer_config)
+        print(downloaded_path)
         return downloaded_path
 
     def extract_bag(self, file_path):
@@ -105,6 +107,7 @@ class Validator(object):
         Raises:
             bagit.BagValidationError with the error in the `details` property.
         """
+        print(list(bag_path.iterdir()))
         bag = bagit.Bag(str(bag_path))
         bag.validate()
 
