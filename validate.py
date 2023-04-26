@@ -63,10 +63,10 @@ class Validator(object):
             self.validate_assets(extracted)
             self.validate_file_formats(extracted)
             self.move_to_destination(extracted)
-            self.cleanup_successful_job(extracted)
+            self.cleanup_binaries(extracted)
             self.deliver_success_notification()
         except Exception as e:
-            self.cleanup_failed_job(extracted)
+            self.cleanup_binaries(extracted)
             self.deliver_failure_notification(e)
 
     def download_bag(self):
@@ -107,7 +107,9 @@ class Validator(object):
         Raises:
             bagit.BagValidationError with the error in the `details` property.
         """
-        print(list(bag_path.iterdir()))
+        data_dir = Path(bag_path, 'data')
+        if data_dir.is_dir():
+            print(list(data_dir.iterdir()))
         bag = bagit.Bag(str(bag_path))
         bag.validate()
 
@@ -180,8 +182,8 @@ class Validator(object):
                         path_obj.suffix)},
                 Config=self.transfer_config)
 
-    def cleanup_successful_job(self, bag_path):
-        """Removes artifacts after completion of successful job.
+    def cleanup_binaries(self, bag_path):
+        """Removes binaries after completion of successful or failed job.
 
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
@@ -191,21 +193,6 @@ class Validator(object):
         self.s3.delete_object(
             Bucket=self.source_bucket,
             Key=self.source_filename)
-
-    def cleanup_failed_job(self, bag_path):
-        """Removes artifacts after failed job.
-
-        Args:
-            bag_path (pathlib.Path): path of bagit Bag containing assets.
-        """
-        if bag_path.is_dir():
-            rmtree(bag_path)
-        to_delete = self.s3.list_objects_v2(
-            Bucket=self.destination_bucket,
-            Prefix=self.refid).get('Contents', [])
-        self.s3.delete_objects(
-            Bucket=self.destination_bucket,
-            Delete={'Objects': [{'Key': k['Key']} for k in to_delete]})
 
     def deliver_success_notification(self):
         """Sends notifications after successful run."""

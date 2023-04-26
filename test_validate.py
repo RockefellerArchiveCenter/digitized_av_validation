@@ -54,7 +54,7 @@ def test_init():
 @patch('validate.Validator.validate_assets')
 @patch('validate.Validator.validate_file_formats')
 @patch('validate.Validator.move_to_destination')
-@patch('validate.Validator.cleanup_successful_job')
+@patch('validate.Validator.cleanup_binaries')
 @patch('validate.Validator.deliver_success_notification')
 def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
              mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download):
@@ -75,7 +75,7 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
 
 
 @patch('validate.Validator.download_bag')
-@patch('validate.Validator.cleanup_failed_job')
+@patch('validate.Validator.cleanup_binaries')
 @patch('validate.Validator.deliver_failure_notification')
 def test_run_with_exception(mock_deliver, mock_cleanup, mock_download):
     """Asserts run method handles exceptions correctly."""
@@ -203,8 +203,8 @@ def test_move_to_destination():
 
 
 @mock_s3
-def test_cleanup_successful_job():
-    """Asserts that successful jobs are cleaned up properly."""
+def test_cleanup_binaries():
+    """Asserts that binaries are cleaned up properly."""
     validator = Validator(*DEFAULT_ARGS)
     fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -217,33 +217,8 @@ def test_cleanup_successful_job():
         Key=validator.source_filename,
         Body='')
 
-    validator.cleanup_successful_job(tmp_path)
+    validator.cleanup_binaries(tmp_path)
     assert not tmp_path.is_dir()
-
-
-@mock_s3
-def test_cleanup_failed_job():
-    """Asserts that failed jobs are cleaned up properly."""
-    validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52")
-    tmp_path = Path(validator.tmp_dir, validator.refid)
-    copytree(fixture_path, tmp_path)
-
-    s3 = boto3.client('s3', region_name='us-east-1')
-    s3.create_bucket(Bucket=validator.destination_bucket)
-    s3.put_object(
-        Bucket=validator.destination_bucket,
-        Key=validator.refid,
-        Body='')
-    s3.put_object(Bucket=validator.destination_bucket,
-                  Key=f"{validator.refid}/foo", Body='')
-
-    validator.cleanup_failed_job(tmp_path)
-    assert not tmp_path.is_dir()
-    deleted = s3.list_objects(
-        Bucket=validator.destination_bucket,
-        Prefix=validator.refid).get('Contents', [])
-    assert len(deleted) == 0
 
 
 @mock_sns
