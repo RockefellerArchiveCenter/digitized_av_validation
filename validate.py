@@ -9,6 +9,7 @@ import bagit
 import boto3
 
 logging.basicConfig(level=os.environ.get('LOGGING_LEVEL', logging.INFO))
+logging.getLogger("bagit").setLevel(logging.ERROR)
 
 
 class ExtractError(Exception):
