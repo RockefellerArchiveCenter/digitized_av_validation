@@ -3,13 +3,12 @@ RUN apt-get update && apt-get install -y mediaconch
 WORKDIR /code
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-COPY validate.py .
+COPY src src
 
 FROM base as test
 COPY test_requirements.txt .coveragerc ./
 RUN pip install -r test_requirements.txt
-COPY fixtures fixtures
-COPY test_validate.py .
+COPY tests tests
 
 FROM base as build
-CMD [ "python", "validate.py" ]
+CMD [ "python", "src/validate.py" ]

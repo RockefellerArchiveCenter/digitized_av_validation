@@ -10,7 +10,8 @@ import pytest
 from moto import mock_s3, mock_sns, mock_sqs
 from moto.core import DEFAULT_ACCOUNT_ID
 
-from validate import AssetValidationError, FileFormatValidationError, Validator
+from src.validate import (AssetValidationError, FileFormatValidationError,
+                          Validator)
 
 DEFAULT_ARGS = [
     'audio',
@@ -48,14 +49,14 @@ def test_init():
         Validator(*invalid_args)
 
 
-@patch('validate.Validator.download_bag')
-@patch('validate.Validator.extract_bag')
-@patch('validate.Validator.validate_bag')
-@patch('validate.Validator.validate_assets')
-@patch('validate.Validator.validate_file_formats')
-@patch('validate.Validator.move_to_destination')
-@patch('validate.Validator.cleanup_binaries')
-@patch('validate.Validator.deliver_success_notification')
+@patch('src.validate.Validator.download_bag')
+@patch('src.validate.Validator.extract_bag')
+@patch('src.validate.Validator.validate_bag')
+@patch('src.validate.Validator.validate_assets')
+@patch('src.validate.Validator.validate_file_formats')
+@patch('src.validate.Validator.move_to_destination')
+@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.deliver_success_notification')
 def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
              mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download):
     """Asserts correct methods are called by run method."""
@@ -74,9 +75,9 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
     mock_download.assert_called_once_with()
 
 
-@patch('validate.Validator.download_bag')
-@patch('validate.Validator.cleanup_binaries')
-@patch('validate.Validator.deliver_failure_notification')
+@patch('src.validate.Validator.download_bag')
+@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.deliver_failure_notification')
 def test_run_with_exception(mock_deliver, mock_cleanup, mock_download):
     """Asserts run method handles exceptions correctly."""
     validator = Validator(*DEFAULT_ARGS)
@@ -105,7 +106,10 @@ def test_download_bag():
 def test_extract_bag():
     """Asserts bag is extracted correctly and downloaded file is removed."""
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52.tar.gz")
+    fixture_path = Path(
+        "tests",
+        "fixtures",
+        "b90862f3baceaae3b7418c78f9d50d52.tar.gz")
     tmp_path = Path(validator.tmp_dir, validator.source_filename)
     copyfile(fixture_path, tmp_path)
 
@@ -117,7 +121,10 @@ def test_extract_bag():
 def test_validate_bag():
     """Asserts bag validation is successful or raises expected exceptions on failure."""
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52")
+    fixture_path = Path(
+        "tests",
+        "fixtures",
+        "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
 
@@ -137,7 +144,7 @@ def test_validate_assets():
                   'topic']
     for args in [DEFAULT_ARGS, video_args]:
         validator = Validator(*args)
-        fixture_path = Path("fixtures", validator.refid)
+        fixture_path = Path("tests", "fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
         copytree(fixture_path, tmp_path)
 
@@ -153,7 +160,7 @@ def test_validate_assets_missing_file():
                   'topic']
     for args in [DEFAULT_ARGS, video_args]:
         validator = Validator(*args)
-        fixture_path = Path("fixtures", validator.refid)
+        fixture_path = Path("tests", "fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
         copytree(fixture_path, tmp_path)
 
@@ -164,10 +171,10 @@ def test_validate_assets_missing_file():
             validator.validate_assets(tmp_path)
 
 
-@patch('validate.subprocess.call')
+@patch('src.validate.subprocess.call')
 def test_validate_file_formats(mock_subprocess):
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", validator.refid)
+    fixture_path = Path("tests", "fixtures", validator.refid)
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
 
@@ -185,7 +192,10 @@ def test_validate_file_formats(mock_subprocess):
 def test_move_to_destination():
     """Asserts correct file are moved to correct location."""
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52")
+    fixture_path = Path(
+        "tests",
+        "fixtures",
+        "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
     s3 = boto3.client('s3', region_name='us-east-1')
@@ -206,7 +216,10 @@ def test_move_to_destination():
 def test_cleanup_binaries():
     """Asserts that binaries are cleaned up properly."""
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path("fixtures", "b90862f3baceaae3b7418c78f9d50d52")
+    fixture_path = Path(
+        "tests",
+        "fixtures",
+        "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
 
