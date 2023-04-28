@@ -75,7 +75,7 @@ class Validator(object):
                 f'{self.format} package {self.refid} successfully validated.')
         except Exception as e:
             logging.error(e)
-            self.cleanup_binaries(extracted)
+            self.cleanup_binaries(extracted, job_failed=True)
             self.deliver_failure_notification(e)
 
     def download_bag(self):
@@ -194,7 +194,7 @@ class Validator(object):
         logging.debug(
             f'All files in payload directory of {bag_path} moved to destination.')
 
-    def cleanup_binaries(self, bag_path):
+    def cleanup_binaries(self, bag_path, job_failed=False):
         """Removes binaries after completion of successful or failed job.
 
         Args:
@@ -202,9 +202,10 @@ class Validator(object):
         """
         if bag_path.is_dir():
             rmtree(bag_path)
-        self.s3.delete_object(
-            Bucket=self.source_bucket,
-            Key=self.source_filename)
+        if not job_failed:
+            self.s3.delete_object(
+                Bucket=self.source_bucket,
+                Key=self.source_filename)
         logging.debug('Binaries cleaned up.')
 
     def deliver_success_notification(self):

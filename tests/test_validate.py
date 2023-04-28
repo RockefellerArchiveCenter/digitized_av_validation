@@ -221,10 +221,10 @@ def test_cleanup_binaries():
         "fixtures",
         "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
-    copytree(fixture_path, tmp_path)
-
     s3 = boto3.client('s3', region_name='us-east-1')
     s3.create_bucket(Bucket=validator.source_bucket)
+
+    copytree(fixture_path, tmp_path)
     s3.put_object(
         Bucket=validator.source_bucket,
         Key=validator.source_filename,
@@ -232,6 +232,23 @@ def test_cleanup_binaries():
 
     validator.cleanup_binaries(tmp_path)
     assert not tmp_path.is_dir()
+    found = s3.list_objects_v2(
+        Bucket=validator.source_bucket,
+        Prefix=validator.refid)['KeyCount']
+    assert found == 0
+
+    copytree(fixture_path, tmp_path)
+    s3.put_object(
+        Bucket=validator.source_bucket,
+        Key=validator.source_filename,
+        Body='')
+
+    validator.cleanup_binaries(tmp_path, job_failed=True)
+    assert not tmp_path.is_dir()
+    found = s3.list_objects_v2(
+        Bucket=validator.source_bucket,
+        Prefix=validator.refid)['KeyCount']
+    assert found == 1
 
 
 @mock_sns
