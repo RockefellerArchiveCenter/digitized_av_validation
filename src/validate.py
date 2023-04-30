@@ -8,7 +8,9 @@ from shutil import rmtree
 import bagit
 import boto3
 
-logging.basicConfig(level=os.environ.get('LOGGING_LEVEL', logging.INFO))
+logging.basicConfig(
+    level=int(os.environ.get('LOGGING_LEVEL', logging.INFO)),
+    format='%(filename)s::%(funcname)s::%(lineno)s %(message)s')
 logging.getLogger("bagit").setLevel(logging.ERROR)
 
 
