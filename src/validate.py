@@ -76,7 +76,7 @@ class Validator(object):
             logging.info(
                 f'{self.format} package {self.refid} successfully validated.')
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             self.cleanup_binaries(extracted, job_failed=True)
             self.deliver_failure_notification(e)
 
