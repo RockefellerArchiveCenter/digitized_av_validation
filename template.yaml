@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  digitized-av-validation
+
+  Handles validation of incoming digitized audiovisual assets.
+
+Parameters:
+  ContainerImageName:
+    Type: String
+    Description: Name of container used in this task.
+    Default: digitized_av_validation
+  StoragePath:
+    Type: String
+    Description: Path to use in temporary storage
+    Default: '/validator'
+
+Resources:
+  ValidationECSTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties: 
+      ContainerDefinitions: 
+        - Name: !Ref ContainerImageName
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
+          Essential: true
+          Environment:
+            - Name: TMP_DIR
+              Value: !Ref StoragePath
+            - Name: AWS_SNS_TOPIC
+              Value: !ImportValue DigitizedAV-SNSTopicArn
+            - Name: AWS_REGION_NAME
+              Value: !Ref AWS::Region
+          MountPoints:
+            - SourceVolume: efs
+              ContainerPath: !Ref StoragePath
+              ReadOnly: false
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              "awslogs-create-group": "true"
+              "awslogs-group": !Sub "/ecs/${ContainerImageName}"
+              "awslogs-region": "us-east-1"
+              "awslogs-stream-prefix": "ecs"
+      ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole
+      Family: digitized_av_validation
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - "FARGATE"
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      Volumes: 
+        - Name: "efs"
+          EFSVolumeConfiguration:
+            FilesystemId: !ImportValue DigitizedAV-EFS
+            RootDirectory: /
+            TransitEncryption: ENABLED
+            AuthorizationConfig:
+              AccessPointId: !ImportValue DigitizedAV-EFS-ValidatorAccessPoint
+              IAM: DISABLED
+  
+  AudioUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: String
+      BucketName: rac-av-upload-audio
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !ImportValue DigitizedAV-TriggerArn
+            Event: 's3:ObjectCreated:*'
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+ 
+  VideoUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: String
+      BucketName: rac-av-upload-video
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !ImportValue DigitizedAV-TriggerArn
+            Event: 's3:ObjectCreated:*'
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+Outputs:
+  ValidationECSTask:
+    Description: "Validation ECS Task Definition ARN"
+    Value: !GetAtt ValidationECSTask.Arn
+  AudioUploadBucket:
+    Description: "Audio upload S3 bucket ARN"
+    Value: !GetAtt AudioUploadBucket.Arn
+  VideoUploadBucket:
+    Description: "Video upload S3 bucket ARN"
+    Value: !GetAtt VideoUploadBucket.Arn  
