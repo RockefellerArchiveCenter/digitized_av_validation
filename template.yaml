@@ -11,8 +11,12 @@ Parameters:
     Default: digitized_av_validation
   StoragePath:
     Type: String
-    Description: Path to use in temporary storage
-    Default: '/validator'
+    Description: Path to use in temporary storage.
+    Default: '/validation'
+  DestinationPath:
+    Type: String
+    Description: Path to which to deliver validated assets.
+    Default: '/qc'
 
 Resources:
   ValidationECSTask:
@@ -25,6 +29,8 @@ Resources:
           Environment:
             - Name: TMP_DIR
               Value: !Ref StoragePath
+            - Name: DESTINATION_DIR
+              Value: !Ref DestinationPath
             - Name: AWS_SNS_TOPIC
               Value: !ImportValue DigitizedAV-SNSTopicArn
             - Name: AWS_REGION_NAME

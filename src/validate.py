@@ -3,7 +3,7 @@ import os
 import subprocess
 import tarfile
 from pathlib import Path
-from shutil import rmtree
+from shutil import copytree, rmtree
 
 import bagit
 import boto3
@@ -30,10 +30,10 @@ class Validator(object):
     """Validates digitized audio and moving image assets."""
 
     def __init__(self, format, source_bucket,
-                 destination_bucket, source_filename, tmp_dir, sns_topic):
+                 destination_dir, source_filename, tmp_dir, sns_topic):
         self.format = format
         self.source_bucket = source_bucket
-        self.destination_bucket = destination_bucket
+        self.destination_dir = destination_dir
         self.source_filename = source_filename
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
@@ -157,42 +157,14 @@ class Validator(object):
                     f"{str(f)} is not valid according to format policy: {error}")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
-    def get_content_type(self, extension):
-        """Returns mimetypes for known file extensions.
-
-        Args:
-            extension (string): file extension to match.
-
-        Returns:
-            format (string): mimetype of matched format.
-        """
-        format_map = {
-            ".mkv": "video/x-matroska",
-            ".mov": "video/quicktime",
-            ".mp4": "video/mp4",
-            ".wav": "audio/x-wav",
-            ".mp3": "audio/mpeg"}
-        try:
-            return format_map[extension]
-        except KeyError:
-            raise Exception(
-                f"Unable to upload asset with unknown extension {extension}.")
-
     def move_to_destination(self, bag_path):
-        """"Uploads validated assets to destination S3 bucket.
+        """"Moves validated assets to destination directory.
 
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
-        for path_obj in bag_path.glob('data/*'):
-            self.s3.upload_file(
-                path_obj,
-                self.destination_bucket,
-                f"{self.refid}/{path_obj.name}",
-                ExtraArgs={
-                    'ContentType': self.get_content_type(
-                        path_obj.suffix)},
-                Config=self.transfer_config)
+        new_path = Path(self.destination_dir, self.refid)
+        copytree(Path(bag_path, 'data'), new_path)
         logging.debug(
             f'All files in payload directory of {bag_path} moved to destination.')
 
@@ -272,16 +244,16 @@ class Validator(object):
 if __name__ == '__main__':
     format = os.environ.get('FORMAT')
     source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
-    destination_bucket = os.environ.get('AWS_DESTINATION_BUCKET')
     source_filename = os.environ.get('SOURCE_FILENAME')
     tmp_dir = os.environ.get('TMP_DIR')
+    destination_dir = os.environ.get('DESTINATION_DIR')
     sns_topic = os.environ.get('AWS_SNS_TOPIC')
     logging.debug(
-        f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_bucket: {destination_bucket}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
+        f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_dir: {destination_dir}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
     Validator(
         format,
         source_bucket,
-        destination_bucket,
+        destination_dir,
         source_filename,
         tmp_dir,
         sns_topic).run()

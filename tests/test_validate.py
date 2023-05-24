@@ -16,22 +16,32 @@ from src.validate import (AssetValidationError, FileFormatValidationError,
 DEFAULT_ARGS = [
     'audio',
     'foo',
-    'bar',
+    '/qc',
     'b90862f3baceaae3b7418c78f9d50d52.tar.gz',
-    'tmp',
+    '/validation',
     'topic']
+
+VIDEO_ARGS = ['video',
+              'foo',
+              '/qc',
+              '20f8da26e268418ead4aa2365f816a08.tar.gz',
+              '/validation',
+              'topic']
 
 
 @pytest.fixture(autouse=True)
 def setup_and_teardown():
-    """Fixture to create and tear down tmp dir before and after a test is run"""
-    tmp_dir = Path(DEFAULT_ARGS[4])
-    if not tmp_dir.is_dir():
-        tmp_dir.mkdir()
+    """Fixture to create and tear down dir before and after a test is run"""
+    dir_list = [DEFAULT_ARGS[2], DEFAULT_ARGS[4]]
+    for dir in dir_list:
+        dir_path = Path(dir)
+        if not dir_path.is_dir():
+            dir_path.mkdir()
 
     yield  # this is where the testing happens
 
-    rmtree(DEFAULT_ARGS[4])
+    for dir in dir_list:
+        rmtree(dir)
 
 
 def test_init():
@@ -39,9 +49,9 @@ def test_init():
     validator = Validator(*DEFAULT_ARGS)
     assert validator.format == 'audio'
     assert validator.source_bucket == 'foo'
-    assert validator.destination_bucket == 'bar'
+    assert validator.destination_dir == '/qc'
     assert validator.source_filename == 'b90862f3baceaae3b7418c78f9d50d52.tar.gz'
-    assert validator.tmp_dir == 'tmp'
+    assert validator.tmp_dir == '/validation'
     assert validator.refid == 'b90862f3baceaae3b7418c78f9d50d52'
 
     invalid_args = ['text', 'foo', 'bar', 'baz.tar.gz', 'tmp']
@@ -136,13 +146,7 @@ def test_validate_bag():
 
 
 def test_validate_assets():
-    video_args = ['video',
-                  'foo',
-                  'bar',
-                  '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                  'tmp',
-                  'topic']
-    for args in [DEFAULT_ARGS, video_args]:
+    for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
         fixture_path = Path("tests", "fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -152,13 +156,7 @@ def test_validate_assets():
 
 
 def test_validate_assets_missing_file():
-    video_args = ['video',
-                  'foo',
-                  'bar',
-                  '20f8da26e268418ead4aa2365f816a08.tar.gz',
-                  'tmp',
-                  'topic']
-    for args in [DEFAULT_ARGS, video_args]:
+    for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
         fixture_path = Path("tests", "fixtures", validator.refid)
         tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -188,7 +186,6 @@ def test_validate_file_formats(mock_subprocess):
         assert error_string in error
 
 
-@mock_s3
 def test_move_to_destination():
     """Asserts correct file are moved to correct location."""
     validator = Validator(*DEFAULT_ARGS)
@@ -198,16 +195,15 @@ def test_move_to_destination():
         "b90862f3baceaae3b7418c78f9d50d52")
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
-    s3 = boto3.client('s3', region_name='us-east-1')
-    s3.create_bucket(Bucket=validator.destination_bucket)
 
     validator.move_to_destination(tmp_path)
     expected_paths = [
-        f"{validator.refid}/{validator.refid}_a.mp3",
-        f"{validator.refid}/{validator.refid}_ma.wav"]
-    found = [o['Key'] for o in s3.list_objects_v2(
-        Bucket=validator.destination_bucket,
-        Prefix=validator.refid)['Contents']]
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_a.mp3",
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_ma.wav"]
+    found = list(
+        str(p) for p in Path(
+            validator.destination_dir,
+            validator.refid).glob('*'))
     assert len(expected_paths) == len(found)
     assert sorted(expected_paths) == sorted(found)
 
