@@ -41,15 +41,15 @@ Resources:
               "awslogs-region": "us-east-1"
               "awslogs-stream-prefix": "ecs"
       ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole
-      Family: digitized_av_validation
+      Family: !Ref ContainerImageName
       NetworkMode: awsvpc
       RequiresCompatibilities:
-        - "FARGATE"
+        - FARGATE
       RuntimePlatform:
         CpuArchitecture: X86_64
         OperatingSystemFamily: LINUX
       Volumes: 
-        - Name: "efs"
+        - Name: efs
           EFSVolumeConfiguration:
             FilesystemId: !ImportValue DigitizedAV-EFS
             RootDirectory: /
