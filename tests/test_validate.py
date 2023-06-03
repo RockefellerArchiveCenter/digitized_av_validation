@@ -7,13 +7,16 @@ from unittest.mock import patch
 import bagit
 import boto3
 import pytest
-from moto import mock_s3, mock_sns, mock_sqs
+from moto import mock_s3, mock_sns, mock_sqs, mock_ssm
 from moto.core import DEFAULT_ACCOUNT_ID
 
 from src.validate import (AssetValidationError, FileFormatValidationError,
-                          Validator)
+                          Validator, get_config)
 
 DEFAULT_ARGS = [
+    'key_id',
+    'key',
+    'us-east-1',
     'audio',
     'foo',
     '/qc',
@@ -21,18 +24,22 @@ DEFAULT_ARGS = [
     '/validation',
     'topic']
 
-VIDEO_ARGS = ['video',
-              'foo',
-              '/qc',
-              '20f8da26e268418ead4aa2365f816a08.tar.gz',
-              '/validation',
-              'topic']
+VIDEO_ARGS = [
+    'key_id',
+    'key',
+    'us-east-1',
+    'video',
+    'foo',
+    '/qc',
+    '20f8da26e268418ead4aa2365f816a08.tar.gz',
+    '/validation',
+    'topic']
 
 
 @pytest.fixture(autouse=True)
 def setup_and_teardown():
     """Fixture to create and tear down dir before and after a test is run"""
-    dir_list = [DEFAULT_ARGS[2], DEFAULT_ARGS[4]]
+    dir_list = [DEFAULT_ARGS[5], DEFAULT_ARGS[7]]
     for dir in dir_list:
         dir_path = Path(dir)
         if not dir_path.is_dir():
@@ -42,6 +49,20 @@ def setup_and_teardown():
 
     for dir in dir_list:
         rmtree(dir)
+
+
+@mock_ssm
+def test_get_config():
+    ssm = boto3.client('ssm', region_name='us-east-1')
+    path = "/dev/digitized-av-validation"
+    for name, value in [("foo", "bar"), ("baz", "buzz")]:
+        ssm.put_parameter(
+            Name=f"{path}/{name}",
+            Value=value,
+            Type="SecureString",
+        )
+    config = get_config(path, 'us-east-1')
+    assert config == {'foo': 'bar', 'baz': 'buzz'}
 
 
 def test_init():

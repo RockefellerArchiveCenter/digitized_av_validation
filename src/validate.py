@@ -29,7 +29,7 @@ class FileFormatValidationError(Exception):
 class Validator(object):
     """Validates digitized audio and moving image assets."""
 
-    def __init__(self, format, source_bucket,
+    def __init__(self, access_key_id, access_key, region, format, source_bucket,
                  destination_dir, source_filename, tmp_dir, sns_topic):
         self.format = format
         self.source_bucket = source_bucket
@@ -40,14 +40,14 @@ class Validator(object):
         self.sns_topic = sns_topic
         self.sns = boto3.client(
             'sns',
-            region_name=os.environ.get('AWS_REGION_NAME', 'us-east-1'),
-            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
+            region_name=region,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=access_key)
         self.s3 = boto3.client(
             's3',
-            region_name=os.environ.get('AWS_REGION_NAME', 'us-east-1'),
-            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
+            region_name=region,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=access_key)
         self.transfer_config = boto3.s3.transfer.TransferConfig(
             multipart_threshold=1024 * 25,
             max_concurrency=10,
@@ -241,16 +241,55 @@ class Validator(object):
         logging.debug('Failure notification sent.')
 
 
+def get_config(ssm_parameter_path, region_name):
+    """Fetch config values from Parameter Store.
+
+    Args:
+        ssm_parameter_path (str): Path to parameters
+
+    Returns:
+        configuration (dict): all parameters found at the supplied path.
+            The following keys are expected to be present:
+                - AWS_ACCESS_KEY_ID
+                - AWS_SECRET_ACCESS_KEY
+                - AWS_REGION
+                - TMP_DIR
+                - DESTINATION_DIR
+                - SNS_TOPIC
+    """
+    client = boto3.client('ssm', region_name=region_name)
+    configuration = {}
+    param_details = client.get_parameters_by_path(
+        Path=ssm_parameter_path,
+        Recursive=False,
+        WithDecryption=True)
+
+    for param in param_details.get('Parameters', []):
+        param_path_array = param.get('Name').split("/")
+        section_name = param_path_array[-1]
+        configuration[section_name] = param.get('Value')
+
+    return configuration
+
+
 if __name__ == '__main__':
+    region = os.environ.get('AWS_REGION')
     format = os.environ.get('FORMAT')
     source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
     source_filename = os.environ.get('SOURCE_FILENAME')
-    tmp_dir = os.environ.get('TMP_DIR')
-    destination_dir = os.environ.get('DESTINATION_DIR')
-    sns_topic = os.environ.get('AWS_SNS_TOPIC')
+    ssm_parameter_path = f"/{os.environ.get('ENV')}/{os.environ.get('APP_CONFIG_PATH')}"
+    config = get_config(ssm_parameter_path, region)
+    access_key_id = config.get('AWS_ACCESS_KEY_ID')
+    access_key = config.get('AWS_SECRET_ACCESS_KEY')
+    tmp_dir = config.get('TMP_DIR')
+    destination_dir = config.get('DESTINATION_DIR')
+    sns_topic = config.get('SNS_TOPIC')
     logging.debug(
         f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_dir: {destination_dir}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
     Validator(
+        access_key_id,
+        access_key,
+        region,
         format,
         source_bucket,
         destination_dir,

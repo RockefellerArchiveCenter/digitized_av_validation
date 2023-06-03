@@ -9,14 +9,17 @@ Parameters:
     Type: String
     Description: Name of container used in this task.
     Default: digitized_av_validation
-  StoragePath:
+  ApplicationEnvironment:
     Type: String
-    Description: Path to use in temporary storage.
-    Default: '/validation'
-  DestinationPath:
+    Description: Environment in which application should be deployed.
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  ApplicationName:
     Type: String
-    Description: Path to which to deliver validated assets.
-    Default: '/qc'
+    Description: Name of the application to be deployed.
+    Default: digitized-av-validation
 
 Resources:
   ValidationECSTask:
@@ -27,14 +30,10 @@ Resources:
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
           Essential: true
           Environment:
-            - Name: TMP_DIR
-              Value: !Ref StoragePath
-            - Name: DESTINATION_DIR
-              Value: !Ref DestinationPath
-            - Name: AWS_SNS_TOPIC
-              Value: !ImportValue DigitizedAV-SNSTopicArn
-            - Name: AWS_REGION_NAME
-              Value: !Ref AWS::Region
+            - Name: ENV
+              Value: !Ref ApplicationEnvironment
+            - Name: APP_CONFIG_PATH
+              Value: !Ref ApplicationName
           MountPoints:
             - SourceVolume: efs
               ContainerPath: !Ref StoragePath
