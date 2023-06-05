@@ -34,6 +34,14 @@ Resources:
               Value: !Ref ApplicationEnvironment
             - Name: APP_CONFIG_PATH
               Value: !Ref ApplicationName
+            - Name: TMP_DIR
+              Value: !Ref StoragePath
+            - Name: DESTINATION_DIR
+              Value: !Ref DestinationPath
+            - Name: AWS_REGION_NAME
+              Value: !Ref AWS::Region
+            - Name: AWS_SNS_TOPIC
+              Value: !ImportValue DigitizedAV-SNSTopicArn
           MountPoints:
             - SourceVolume: efs
               ContainerPath: !Ref StoragePath

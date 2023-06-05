@@ -277,13 +277,14 @@ if __name__ == '__main__':
     format = os.environ.get('FORMAT')
     source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
     source_filename = os.environ.get('SOURCE_FILENAME')
+    tmp_dir = os.environ.get('TMP_DIR')
+    destination_dir = os.environ.get('DESTINATION_DIR')
+    sns_topic = os.environ.get('SNS_TOPIC')
+
     ssm_parameter_path = f"/{os.environ.get('ENV')}/{os.environ.get('APP_CONFIG_PATH')}"
     config = get_config(ssm_parameter_path, region)
     access_key_id = config.get('AWS_ACCESS_KEY_ID')
     access_key = config.get('AWS_SECRET_ACCESS_KEY')
-    tmp_dir = config.get('TMP_DIR')
-    destination_dir = config.get('DESTINATION_DIR')
-    sns_topic = config.get('SNS_TOPIC')
     logging.debug(
         f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_dir: {destination_dir}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
     Validator(
