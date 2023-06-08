@@ -20,6 +20,14 @@ Parameters:
     Type: String
     Description: Name of the application to be deployed.
     Default: digitized-av-validation
+  StoragePath:
+    Type: String
+    Description: Temporary storage path into which files are moved during processing.
+    Default: '/tmp'
+  DestinationPath:
+    Type: String
+    Description: Destination storage path to which valid files are moved after processing.
+    Default: '/qc'
 
 Resources:
   ValidationECSTask:
