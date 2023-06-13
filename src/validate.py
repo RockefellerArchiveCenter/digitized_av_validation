@@ -252,10 +252,6 @@ def get_config(ssm_parameter_path, region_name):
             The following keys are expected to be present:
                 - AWS_ACCESS_KEY_ID
                 - AWS_SECRET_ACCESS_KEY
-                - AWS_REGION
-                - TMP_DIR
-                - DESTINATION_DIR
-                - SNS_TOPIC
     """
     client = boto3.client('ssm', region_name=region_name)
     configuration = {}
