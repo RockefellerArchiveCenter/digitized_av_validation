@@ -30,6 +30,50 @@ Parameters:
     Default: '/qc'
 
 Resources:
+  DigitizedAvValidationRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: !Sub 'Allows management of S3 assets and creation of SNS messages.'
+      Policies:
+        - PolicyName: DigitizedAvValidationS3BucketPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - 's3:ListBucket'
+                Resource: 
+                  - !GetAtt AudioUploadBucket.Arn
+                  - !GetAtt VideoUploadBucket.Arn
+        - PolicyName: DigitizedAvValidationS3ObjectPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                Resource: 
+                  - !Sub '${AudioUploadBucket.Arn}/*'
+                  - !Sub '${VideoUploadBucket.Arn}/*'
+        - PolicyName: DigitizedAvValidationSNSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 'sns:Publish'
+                Resource: !ImportValue DigitizedAV-SNSTopicArn
+
   ValidationECSTask:
     Type: AWS::ECS::TaskDefinition
     Properties: 
@@ -38,6 +82,8 @@ Resources:
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
           Essential: true
           Environment:
+            - Name: AWS_ROLE_ARN
+              Value: !GetAtt DigitizedAvValidationRole.Arn
             - Name: ENV
               Value: !Ref ApplicationEnvironment
             - Name: APP_CONFIG_PATH
