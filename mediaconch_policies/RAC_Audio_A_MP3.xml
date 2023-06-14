@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<policy type="and" name="Audio is MP3?" license="CC-BY-4.0+">
+  <description>Checking if audio encoding is MPEG-1 Layer III.&#xD;
+More commonly known as "MP3".&#xD;
+&#xD;
+https://en.wikipedia.org/wiki/MPEG-1_Audio_Layer_III</description>
+  <rule name="Audio format is MPEG?" value="Format" tracktype="Audio" occurrence="*" operator="=">MPEG Audio</rule>
+  <rule name="Audio format version is '1'?" value="Format_Version" tracktype="Audio" occurrence="*" operator="=">1</rule>
+  <rule name="Audio format profile is 'Layer 3'?" value="Format_Profile" tracktype="Audio" occurrence="*" operator="=">Layer 3</rule>
+</policy>
