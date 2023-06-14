@@ -69,6 +69,7 @@ class Validator(object):
             self.deliver_failure_notification(e)
 
     def get_client_with_role(self, resource, role_arn):
+        """Gets Boto3 client which authenticates with a specific IAM role."""
         now = datetime.now()
         timestamp = now.timestamp()
         sts = boto3.client('sts', region_name=self.region)
