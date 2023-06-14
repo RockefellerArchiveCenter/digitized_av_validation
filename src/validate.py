@@ -142,6 +142,28 @@ class Validator(object):
                     f"{filetype} file {filename} missing.")
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
+    def get_policy_path(self, filepath):
+        """Gets path to Mediaconch policy based on filepath extension.
+
+        Args:
+            filepath (Pathlib.path): filepath to parse
+
+        Returns:
+            policy_path (string): filepath of Mediaconch policy.
+        """
+        try:
+            policy_map = {
+                'a.mp3': 'RAC_Audio_A_MP3.xml',
+                'ma.wav': 'RAC_Audio_MA_WAV.xml',
+                'a.mp4': 'RAC_Video_A_MP4.xml',
+                'ma.mkv': 'RAC_Video_MA_FFV1MKV.xml',
+                'me.mov': 'RAC_Video_MEZZ_ProRes.xml', }
+            policy = policy_map[str(filepath).split('_')[-1]]
+            return str(Path('mediaconch_policies', policy))
+        except KeyError:
+            raise FileFormatValidationError(
+                f'No Mediaconch policy found for file {filepath}.')
+
     def validate_file_formats(self, bag_path):
         """Ensures that files pass MediaConch validation rules.
 
@@ -149,8 +171,9 @@ class Validator(object):
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
         for f in bag_path.glob('data/*'):
-            # TODO get policy
-            result = subprocess.call(['mediaconch', '-fs', f])
+            policy_path = self.get_policy_path(f)
+            result = subprocess.call(
+                ['mediaconch', '-p', policy_path, '-fs', f])
             if result != 0:
                 error = subprocess.call(['mediaconch', f])
                 raise FileFormatValidationError(

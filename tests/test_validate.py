@@ -190,6 +190,19 @@ def test_validate_assets_missing_file():
             validator.validate_assets(tmp_path)
 
 
+def test_get_policy():
+    """Asserts correct policies are fetched."""
+    validator = Validator(*DEFAULT_ARGS)
+    for fp, expected_path in [
+            ('bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/buzz_baz/bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml')]:
+        assert validator.get_policy_path(Path(fp)) == expected_path
+
+    with pytest.raises(FileFormatValidationError):
+        validator.get_policy_path(Path("foo.txt"))
+
+
 @patch('src.validate.subprocess.call')
 def test_validate_file_formats(mock_subprocess):
     validator = Validator(*DEFAULT_ARGS)
