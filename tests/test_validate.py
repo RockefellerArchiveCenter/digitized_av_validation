@@ -7,16 +7,15 @@ from unittest.mock import patch
 import bagit
 import boto3
 import pytest
-from moto import mock_s3, mock_sns, mock_sqs, mock_ssm
+from moto import mock_s3, mock_sns, mock_sqs, mock_sts
 from moto.core import DEFAULT_ACCOUNT_ID
 
 from src.validate import (AssetValidationError, FileFormatValidationError,
-                          Validator, get_config)
+                          Validator)
 
 DEFAULT_ARGS = [
-    'key_id',
-    'key',
     'us-east-1',
+    'digitized-av-role-arn',
     'audio',
     'foo',
     '/qc',
@@ -25,9 +24,8 @@ DEFAULT_ARGS = [
     'topic']
 
 VIDEO_ARGS = [
-    'key_id',
-    'key',
     'us-east-1',
+    'role-arn',
     'video',
     'foo',
     '/qc',
@@ -39,7 +37,7 @@ VIDEO_ARGS = [
 @pytest.fixture(autouse=True)
 def setup_and_teardown():
     """Fixture to create and tear down dir before and after a test is run"""
-    dir_list = [DEFAULT_ARGS[5], DEFAULT_ARGS[7]]
+    dir_list = [DEFAULT_ARGS[4], DEFAULT_ARGS[6]]
     for dir in dir_list:
         dir_path = Path(dir)
         if not dir_path.is_dir():
@@ -49,20 +47,6 @@ def setup_and_teardown():
 
     for dir in dir_list:
         rmtree(dir)
-
-
-@mock_ssm
-def test_get_config():
-    ssm = boto3.client('ssm', region_name='us-east-1')
-    path = "/dev/digitized-av-validation"
-    for name, value in [("foo", "bar"), ("baz", "buzz")]:
-        ssm.put_parameter(
-            Name=f"{path}/{name}",
-            Value=value,
-            Type="SecureString",
-        )
-    config = get_config(path, 'us-east-1')
-    assert config == {'foo': 'bar', 'baz': 'buzz'}
 
 
 def test_init():
@@ -120,6 +104,7 @@ def test_run_with_exception(mock_deliver, mock_cleanup, mock_download):
 
 
 @mock_s3
+@mock_sts
 def test_download_bag():
     """Asserts file is downloaded correctly."""
     validator = Validator(*DEFAULT_ARGS)
@@ -243,6 +228,7 @@ def test_move_to_destination():
 
 
 @mock_s3
+@mock_sts
 def test_cleanup_binaries():
     """Asserts that binaries are cleaned up properly."""
     validator = Validator(*DEFAULT_ARGS)
@@ -283,6 +269,7 @@ def test_cleanup_binaries():
 
 @mock_sns
 @mock_sqs
+@mock_sts
 def test_deliver_success_notification():
     sns = boto3.client('sns', region_name='us-east-1')
     topic_arn = sns.create_topic(Name='my-topic')['TopicArn']
@@ -310,6 +297,7 @@ def test_deliver_success_notification():
 
 @mock_sns
 @mock_sqs
+@mock_sts
 def test_deliver_failure_notification():
     sns = boto3.client('sns', region_name='us-east-1')
     topic_arn = sns.create_topic(Name='my-topic')['TopicArn']

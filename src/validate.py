@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import tarfile
+from datetime import datetime
 from pathlib import Path
 from shutil import copytree, rmtree
 
@@ -29,8 +30,10 @@ class FileFormatValidationError(Exception):
 class Validator(object):
     """Validates digitized audio and moving image assets."""
 
-    def __init__(self, access_key_id, access_key, region, format, source_bucket,
+    def __init__(self, region, role_arn, format, source_bucket,
                  destination_dir, source_filename, tmp_dir, sns_topic):
+        self.role_arn = role_arn
+        self.region = region
         self.format = format
         self.source_bucket = source_bucket
         self.destination_dir = destination_dir
@@ -38,21 +41,6 @@ class Validator(object):
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
         self.sns_topic = sns_topic
-        self.sns = boto3.client(
-            'sns',
-            region_name=region,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=access_key)
-        self.s3 = boto3.client(
-            's3',
-            region_name=region,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=access_key)
-        self.transfer_config = boto3.s3.transfer.TransferConfig(
-            multipart_threshold=1024 * 25,
-            max_concurrency=10,
-            multipart_chunksize=1024 * 25,
-            use_threads=True)
         if self.format not in ['audio', 'video']:
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
@@ -80,6 +68,22 @@ class Validator(object):
             self.cleanup_binaries(extracted, job_failed=True)
             self.deliver_failure_notification(e)
 
+    def get_client_with_role(self, resource, role_arn):
+        now = datetime.now()
+        timestamp = now.timestamp()
+        sts = boto3.client('sts', region_name=self.region)
+        role = sts.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName=f'digitized-av-validation-{timestamp}')
+        credentials = role['Credentials']
+        client = boto3.client(
+            resource,
+            region_name=self.region,
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken'],)
+        return client
+
     def download_bag(self):
         """Downloads a streaming file from S3.
 
@@ -87,11 +91,17 @@ class Validator(object):
             downloaded_path (pathlib.Path): path of the downloaded file.
         """
         downloaded_path = Path(self.tmp_dir, self.source_filename)
-        self.s3.download_file(
+        client = self.get_client_with_role('s3', self.role_arn)
+        transfer_config = boto3.s3.transfer.TransferConfig(
+            multipart_threshold=1024 * 25,
+            max_concurrency=10,
+            multipart_chunksize=1024 * 25,
+            use_threads=True)
+        client.download_file(
             self.source_bucket,
             self.source_filename,
             downloaded_path,
-            Config=self.transfer_config)
+            Config=transfer_config)
         logging.debug(f'Package downloaded to {downloaded_path}.')
         return downloaded_path
 
@@ -197,17 +207,19 @@ class Validator(object):
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
+        client = self.get_client_with_role('s3', self.role_arn)
         if bag_path.is_dir():
             rmtree(bag_path)
         if not job_failed:
-            self.s3.delete_object(
+            client.delete_object(
                 Bucket=self.source_bucket,
                 Key=self.source_filename)
         logging.debug('Binaries cleaned up.')
 
     def deliver_success_notification(self):
         """Sends notifications after successful run."""
-        self.sns.publish(
+        client = self.get_client_with_role('sns', self.role_arn)
+        client.publish(
             TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} successfully validated',
             MessageAttributes={
@@ -236,7 +248,8 @@ class Validator(object):
         Args:
             exception (Exception): the exception that was thrown.
         """
-        self.sns.publish(
+        client = self.get_client_with_role('sns', self.role_arn)
+        client.publish(
             TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} is invalid',
             MessageAttributes={
@@ -264,35 +277,9 @@ class Validator(object):
         logging.debug('Failure notification sent.')
 
 
-def get_config(ssm_parameter_path, region_name):
-    """Fetch config values from Parameter Store.
-
-    Args:
-        ssm_parameter_path (str): Path to parameters
-
-    Returns:
-        configuration (dict): all parameters found at the supplied path.
-            The following keys are expected to be present:
-                - AWS_ACCESS_KEY_ID
-                - AWS_SECRET_ACCESS_KEY
-    """
-    client = boto3.client('ssm', region_name=region_name)
-    configuration = {}
-    param_details = client.get_parameters_by_path(
-        Path=ssm_parameter_path,
-        Recursive=False,
-        WithDecryption=True)
-
-    for param in param_details.get('Parameters', []):
-        param_path_array = param.get('Name').split("/")
-        section_name = param_path_array[-1]
-        configuration[section_name] = param.get('Value')
-
-    return configuration
-
-
 if __name__ == '__main__':
     region = os.environ.get('AWS_REGION')
+    role_arn = os.environ.get('AWS_ROLE_ARN')
     format = os.environ.get('FORMAT')
     source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
     source_filename = os.environ.get('SOURCE_FILENAME')
@@ -300,16 +287,11 @@ if __name__ == '__main__':
     destination_dir = os.environ.get('DESTINATION_DIR')
     sns_topic = os.environ.get('SNS_TOPIC')
 
-    ssm_parameter_path = f"/{os.environ.get('ENV')}/{os.environ.get('APP_CONFIG_PATH')}"
-    config = get_config(ssm_parameter_path, region)
-    access_key_id = config.get('AWS_ACCESS_KEY_ID')
-    access_key = config.get('AWS_SECRET_ACCESS_KEY')
     logging.debug(
-        f'Validator called with arguments: format: {format}, source_bucket: {source_bucket}, destination_dir: {destination_dir}, source_filename: {source_filename}, tmp_dir: {tmp_dir}, sns_topic: {sns_topic}')
+        f'Validator instantiated with arguments: {region} {role_arn} {format} {source_bucket} {destination_dir} {source_filename} {tmp_dir} {sns_topic}')
     Validator(
-        access_key_id,
-        access_key,
         region,
+        role_arn,
         format,
         source_bucket,
         destination_dir,
