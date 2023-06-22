@@ -8,26 +8,27 @@ Parameters:
   ContainerImageName:
     Type: String
     Description: Name of container used in this task.
-    Default: digitized_av_validation
   ApplicationEnvironment:
     Type: String
     Description: Environment in which application should be deployed.
     AllowedValues:
       - dev
       - prod
-    Default: dev
   ApplicationName:
     Type: String
     Description: Name of the application to be deployed.
-    Default: digitized-av-validation
+  EfsId:
+    Type: String
+    Description: Identifier for temporary storage EFS.
+  EfsAccessPointId:
+    Type: String
+    Description: Identifier for temporary storage EFS access point.
   StoragePath:
     Type: String
     Description: Temporary storage path into which files are moved during processing.
-    Default: '/tmp'
   DestinationPath:
     Type: String
     Description: Destination storage path to which valid files are moved after processing.
-    Default: '/qc'
 
 Resources:
   DigitizedAvValidationRole:
@@ -117,11 +118,11 @@ Resources:
       Volumes: 
         - Name: efs
           EFSVolumeConfiguration:
-            FilesystemId: !ImportValue DigitizedAV-EFS
+            FilesystemId: !Ref EfsId
             RootDirectory: /
             TransitEncryption: ENABLED
             AuthorizationConfig:
-              AccessPointId: !ImportValue DigitizedAV-EFS-ValidatorAccessPoint
+              AccessPointId: !Ref EfsAccessPointId
               IAM: DISABLED
   
   AudioUploadBucket:
