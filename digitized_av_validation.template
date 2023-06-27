@@ -77,6 +77,8 @@ Resources:
   ValidationECSTask:
     Type: AWS::ECS::TaskDefinition
     Properties: 
+      Cpu: 1024
+      Memory: 3072
       ContainerDefinitions: 
         - Name: !Ref ContainerImageName
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
@@ -128,8 +130,7 @@ Resources:
   AudioUploadBucket:
     Type: AWS::S3::Bucket
     Properties:
-      AccessControl: String
-      BucketName: rac-av-upload-audio
+      BucketName: !Sub rac-${ApplicationEnvironment}-av-upload-audio
       NotificationConfiguration:
         LambdaConfigurations:
           - Function: !ImportValue DigitizedAV-TriggerArn
@@ -143,8 +144,7 @@ Resources:
   VideoUploadBucket:
     Type: AWS::S3::Bucket
     Properties:
-      AccessControl: String
-      BucketName: rac-av-upload-video
+      BucketName: !Sub rac-${ApplicationEnvironment}-av-upload-video
       NotificationConfiguration:
         LambdaConfigurations:
           - Function: !ImportValue DigitizedAV-TriggerArn
@@ -158,7 +158,7 @@ Resources:
 Outputs:
   ValidationECSTask:
     Description: "Validation ECS Task Definition ARN"
-    Value: !GetAtt ValidationECSTask.Arn
+    Value: !Ref ValidationECSTask
   AudioUploadBucket:
     Description: "Audio upload S3 bucket ARN"
     Value: !GetAtt AudioUploadBucket.Arn
