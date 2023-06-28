@@ -17,10 +17,16 @@ before_deploy:
   - docker build -t ${DOCKER_REPO} --target build .
   - if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
 deploy:
-  provider: script
-  script: bash deploy_scripts/containers/push_image_to_ecr.sh
-  on:
-    branch: base
-
+  - provider: script
+    script: bash deploy_scripts/containers/push_image_to_ecr.sh
+    on:
+      branch: base
+  - provider: s3
+    bucket: rac-dev-cloudfront-apps
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
+    glob: digitized_av_validation.template
+    on:
+      branch: development
 notifications:
   email: false
