@@ -8,6 +8,10 @@ Parameters:
   ContainerImageName:
     Type: String
     Description: Name of container used in this task.
+    ContainerAccountId:
+  Type: String
+    Description: Account ID under which container repository is located.
+    Default: 817658541382
   ApplicationEnvironment:
     Type: String
     Description: Environment in which application should be deployed.
@@ -81,7 +85,7 @@ Resources:
       Memory: 3072
       ContainerDefinitions: 
         - Name: !Ref ContainerImageName
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
+          Image: !Sub "${ContainerAccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
           Essential: true
           Environment:
             - Name: AWS_ROLE_ARN
