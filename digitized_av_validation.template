@@ -8,10 +8,10 @@ Parameters:
   ContainerImageName:
     Type: String
     Description: Name of container used in this task.
-    ContainerAccountId:
-  Type: String
+  ContainerAccountId:
+    Type: String
     Description: Account ID under which container repository is located.
-    Default: 817658541382
+    Default: '817658541382'
   ApplicationEnvironment:
     Type: String
     Description: Environment in which application should be deployed.
