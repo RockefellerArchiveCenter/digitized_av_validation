@@ -6,6 +6,7 @@ cache: pip
 env:
   global:
     - TIMESTAMP: $(date '+%Y%m%d%H%M%S')
+    - APP_NAME: digitized_av_validation
 
 before_script:
   - pip install tox
@@ -18,21 +19,25 @@ before_deploy:
   - if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
 deploy:
   - provider: script
-    script: bash deploy_scripts/containers/push_image_to_ecr.sh
+    script: bash deploy_scripts/containers/push_image_to_ecr.sh $APP_NAME
+    on:
+      branch: development
+  - provider: script
+    script: bash deploy_scripts/containers/add_tag_to_image.sh $APP_NAME dev prod
     on:
       branch: base
   - provider: s3
     bucket: rac-dev-cloudfront-apps
     access_key_id: $AWS_ACCESS_KEY_ID
     secret_access_key: $AWS_SECRET_ACCESS_KEY
-    glob: digitized_av_validation.template
+    glob: ${APP_NAME}.template
     on:
       branch: development
   - provider: s3
     bucket: rac-prod-cloudfront-apps
     access_key_id: $AWS_ACCESS_KEY_ID
     secret_access_key: $AWS_SECRET_ACCESS_KEY
-    glob: digitized_av_validation.template
+    glob: ${APP_NAME}.template
     on:
       branch: base
 notifications:
