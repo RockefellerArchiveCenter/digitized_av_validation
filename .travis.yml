@@ -15,7 +15,7 @@ script: tox
 
 before_deploy:
   - pip install awscli
-  - docker build -t ${DOCKER_REPO} --target build .
+  - docker build -t ${APP_NAME} --target build .
   - if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
 deploy:
   - provider: script
