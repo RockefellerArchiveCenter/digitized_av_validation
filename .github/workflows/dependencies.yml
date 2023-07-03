@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: base
+          ref: development
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -34,7 +34,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: base
+          base: development
           branch: dependency-updates
           delete-branch: true
           title: Dependency Updates
