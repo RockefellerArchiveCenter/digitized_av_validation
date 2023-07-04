@@ -5,9 +5,6 @@ Description: >
   Handles validation of incoming digitized audiovisual assets.
 
 Parameters:
-  ContainerImageName:
-    Type: String
-    Description: Name of container used in this task.
   ContainerAccountId:
     Type: String
     Description: Account ID under which container repository is located.
@@ -84,8 +81,8 @@ Resources:
       Cpu: 1024
       Memory: 3072
       ContainerDefinitions: 
-        - Name: !Ref ContainerImageName
-          Image: !Sub "${ContainerAccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ContainerImageName}:latest"
+        - Name: !Ref ApplicationName
+          Image: !Sub "${ContainerAccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationName}:latest"
           Essential: true
           Environment:
             - Name: AWS_ROLE_ARN
@@ -110,11 +107,11 @@ Resources:
             LogDriver: awslogs
             Options:
               "awslogs-create-group": "true"
-              "awslogs-group": !Sub "/ecs/${ContainerImageName}"
+              "awslogs-group": !Sub "/ecs/${ApplicationName}"
               "awslogs-region": "us-east-1"
               "awslogs-stream-prefix": "ecs"
       ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole
-      Family: !Ref ContainerImageName
+      Family: !Ref ApplicationName
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
