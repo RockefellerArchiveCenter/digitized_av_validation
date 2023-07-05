@@ -32,6 +32,21 @@ Parameters:
     Description: Destination storage path to which valid files are moved after processing.
 
 Resources:
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
   DigitizedAvValidationRole:
     Type: AWS::IAM::Role
     Properties: 
@@ -110,7 +125,7 @@ Resources:
               "awslogs-group": !Sub "/ecs/${ApplicationName}"
               "awslogs-region": "us-east-1"
               "awslogs-stream-prefix": "ecs"
-      ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       Family: !Ref ApplicationName
       NetworkMode: awsvpc
       RequiresCompatibilities:
