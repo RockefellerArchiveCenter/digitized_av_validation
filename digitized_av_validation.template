@@ -57,6 +57,14 @@ Resources:
                 Resource: 
                   - '*'
 
+  DigitizedAvValidationUser:
+    Type: AWS::IAM::User
+
+  DigitizedAvValidationUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties: 
+      UserName: !Ref DigitizedAvValidationUser
+
   DigitizedAvValidationRole:
     Type: AWS::IAM::Role
     Properties: 
@@ -64,9 +72,9 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal:
-              Service:
-                - ecs.amazonaws.com
+            Principal: 
+              AWS:
+                - !GetAtt DigitizedAvValidationUser.Arn
             Action:
               - 'sts:AssumeRole'
       Description: !Sub 'Allows management of S3 assets and creation of SNS messages.'
@@ -110,6 +118,10 @@ Resources:
           Image: !Sub "${ContainerAccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationName}:latest"
           Essential: true
           Environment:
+            - Name: AWS_ACCESS_KEY_ID
+              Value: !Ref DigitizedAvValidationUserAccessKey
+            - Name: AWS_SECRET_ACCESS_KEY
+              Value: !GetAtt DigitizedAvValidationUserAccessKey.SecretAccessKey
             - Name: AWS_ROLE_ARN
               Value: !GetAtt DigitizedAvValidationRole.Arn
             - Name: ENV
