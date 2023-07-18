@@ -286,7 +286,7 @@ if __name__ == '__main__':
     source_filename = os.environ.get('SOURCE_FILENAME')
     tmp_dir = os.environ.get('TMP_DIR')
     destination_dir = os.environ.get('DESTINATION_DIR')
-    sns_topic = os.environ.get('SNS_TOPIC')
+    sns_topic = os.environ.get('AWS_SNS_TOPIC')
 
     logging.debug(
         f'Validator instantiated with arguments: {region} {role_arn} {format} {source_bucket} {destination_dir} {source_filename} {tmp_dir} {sns_topic}')
