@@ -47,7 +47,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
-        - PolicyName: CreateLogsPolicy
+        - PolicyName: CreateLogGroupPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
