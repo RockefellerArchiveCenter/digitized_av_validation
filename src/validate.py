@@ -44,7 +44,7 @@ class Validator(object):
         if self.format not in ['audio', 'video']:
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
-            raise Exception(f"Directory {self.tmp_dir} does not exist.")
+            Path(self.tmp_dir).mkdir(parents=True)
         logging.debug(self.__dict__)
 
     def run(self):
