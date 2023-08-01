@@ -24,6 +24,9 @@ Parameters:
   EfsAccessPointId:
     Type: String
     Description: Identifier for temporary storage EFS access point.
+  EfsRootPath:
+    Type: String
+    Description: Root path at which EFS is mounted.
   StoragePath:
     Type: String
     Description: Temporary storage path into which files are moved during processing.
@@ -129,16 +132,16 @@ Resources:
             - Name: APP_CONFIG_PATH
               Value: !Ref ApplicationName
             - Name: TMP_DIR
-              Value: !Ref StoragePath
+              Value: !Sub '${EfsRootPath}/${StoragePath}'
             - Name: DESTINATION_DIR
-              Value: !Ref DestinationPath
+              Value: !Sub '${EfsRootPath}/${DestinationPath}'
             - Name: AWS_REGION_NAME
               Value: !Ref AWS::Region
             - Name: AWS_SNS_TOPIC
               Value: !ImportValue DigitizedAV-SNSTopicArn
           MountPoints:
             - SourceVolume: efs
-              ContainerPath: !Ref StoragePath
+              ContainerPath: !Ref EfsRootPath
               ReadOnly: false
           LogConfiguration:
             LogDriver: awslogs
