@@ -21,13 +21,13 @@ deploy:
   - provider: script
     script: >-
       bash deploy_scripts/containers/push_image_to_ecr.sh $APP_NAME &&
-      bash deploy_scripts/upload_file_to_s3.sh ${APP_NAME}.template rac-dev-cloudformation-apps
+      bash deploy_scripts/upload_file_to_s3.sh ${APP_NAME}_template.yaml rac-dev-cloudformation-apps
     on:
       branch: development
   - provider: script
     script: >-
       bash deploy_scripts/containers/add_tag_to_image.sh $APP_NAME dev prod &&
-      bash deploy_scripts/upload_file_to_s3.sh ${APP_NAME}.template rac-prod-cloudformation-apps
+      bash deploy_scripts/upload_file_to_s3.sh ${APP_NAME}_template.yaml rac-prod-cloudformation-apps
     on:
       branch: base
 notifications:
