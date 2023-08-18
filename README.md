@@ -18,6 +18,39 @@ docker run digitized_av_validation
 
 This repository is intended to be deployed as an ECS Task in AWS infrastructure.
 
+### Expected Package Structure
+
+This validator expects to receive valid BagIt bags serialized as a single `.tar.gz` file. The bag name should correspond to the ArchivesSpace refid for the archival object they represent. Depending on the format of the digitized materials (audio or video) certain files are expected in the payload directory:
+
+#### Audio packages
+```
+/refid
+    tagmanifest-sha512.txt
+    tagmanifest-sha256.txt
+    bag-info.txt
+    bagit.txt
+    manifest-sha512.txt
+    manifest-sha256.txt
+    data/
+        refid_a.mp3
+        refid_ma.wav
+```
+
+#### Video packages
+```
+/refid
+    tagmanifest-sha512.txt
+    tagmanifest-sha256.txt
+    bag-info.txt
+    bagit.txt
+    manifest-sha512.txt
+    manifest-sha256.txt
+    data/
+        refid_a.mp4
+        refid_ma.mkv
+        refid_me.mov
+```
+
 ## License
 
 This code is released under the MIT License.
