@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import subprocess
 import tarfile
 from datetime import datetime
@@ -13,6 +14,10 @@ logging.basicConfig(
     level=int(os.environ.get('LOGGING_LEVEL', logging.INFO)),
     format='%(filename)s::%(funcName)s::%(lineno)s %(message)s')
 logging.getLogger("bagit").setLevel(logging.ERROR)
+
+
+class RefidError(Exception):
+    pass
 
 
 class ExtractError(Exception):
@@ -53,6 +58,7 @@ class Validator(object):
             f'Validation process started for {self.format} package {self.refid}.')
         try:
             extracted = Path(self.tmp_dir, self.refid)
+            self.validate_refid(self.refid)
             downloaded = self.download_bag()
             self.extract_bag(downloaded)
             self.validate_bag(extracted)
@@ -84,6 +90,12 @@ class Validator(object):
             aws_secret_access_key=credentials['SecretAccessKey'],
             aws_session_token=credentials['SessionToken'],)
         return client
+
+    def validate_refid(self, refid):
+        valid = re.compile(r"^[a-zA-Z0-9]{32}$")
+        if not bool(valid.match(refid)):
+            raise RefidError(f"{refid} is not a valid refid.")
+        return True
 
     def download_bag(self):
         """Downloads a streaming file from S3.

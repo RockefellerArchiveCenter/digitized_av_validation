@@ -11,7 +11,7 @@ from moto import mock_s3, mock_sns, mock_sqs, mock_sts
 from moto.core import DEFAULT_ACCOUNT_ID
 
 from src.validate import (AssetValidationError, FileFormatValidationError,
-                          Validator)
+                          RefidError, Validator)
 
 DEFAULT_ARGS = [
     'us-east-1',
@@ -64,6 +64,7 @@ def test_init():
         Validator(*invalid_args)
 
 
+@patch('src.validate.Validator.validate_refid')
 @patch('src.validate.Validator.download_bag')
 @patch('src.validate.Validator.extract_bag')
 @patch('src.validate.Validator.validate_bag')
@@ -73,7 +74,7 @@ def test_init():
 @patch('src.validate.Validator.cleanup_binaries')
 @patch('src.validate.Validator.deliver_success_notification')
 def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
-             mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download):
+             mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download, mock_refid):
     """Asserts correct methods are called by run method."""
     validator = Validator(*DEFAULT_ARGS)
     extracted_path = Path(validator.tmp_dir, validator.refid)
@@ -88,19 +89,27 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
     mock_validate_bag.assert_called_once_with(extracted_path)
     mock_extract_bag.assert_called_once_with(download_path)
     mock_download.assert_called_once_with()
+    mock_refid.assert_called_once_with(validator.refid)
 
 
-@patch('src.validate.Validator.download_bag')
+@patch('src.validate.Validator.validate_refid')
 @patch('src.validate.Validator.cleanup_binaries')
 @patch('src.validate.Validator.deliver_failure_notification')
-def test_run_with_exception(mock_deliver, mock_cleanup, mock_download):
+def test_run_with_exception(mock_deliver, mock_cleanup, mock_refid):
     """Asserts run method handles exceptions correctly."""
     validator = Validator(*DEFAULT_ARGS)
-    exception = Exception("Error downloading bag.")
-    mock_download.side_effect = exception
+    exception = Exception("Invalid refid.")
+    mock_refid.side_effect = exception
     validator.run()
     mock_cleanup.assert_called_once()
     mock_deliver.assert_called_once_with(exception)
+
+
+def test_validate_refid():
+    validator = Validator(*DEFAULT_ARGS)
+    assert validator.validate_refid(validator.refid)
+    with pytest.raises(RefidError):
+        validator.validate_refid('b90862f3baceaae3b7418c78f9d50d5')
 
 
 @mock_s3
