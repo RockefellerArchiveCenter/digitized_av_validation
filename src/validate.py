@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import tarfile
+import traceback
 from datetime import datetime
 from pathlib import Path
 from shutil import copytree, rmtree
@@ -284,7 +285,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': str(exception),
+                    'StringValue': ''.join(traceback.format_exception(exception)),
                 }
             })
         logging.debug('Failure notification sent.')
