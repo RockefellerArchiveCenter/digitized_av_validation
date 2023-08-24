@@ -33,6 +33,10 @@ class FileFormatValidationError(Exception):
     pass
 
 
+class AlreadyExistsError(Exception):
+    pass
+
+
 class Validator(object):
     """Validates digitized audio and moving image assets."""
 
@@ -211,7 +215,11 @@ class Validator(object):
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
         new_path = Path(self.destination_dir, self.refid)
-        copytree(Path(bag_path, 'data'), new_path)
+        try:
+            copytree(Path(bag_path, 'data'), new_path)
+        except FileExistsError:
+            raise AlreadyExistsError(
+                f'A package with refid {self.refid} is already waiting tp be QCed.')
         logging.debug(
             f'All files in payload directory of {bag_path} moved to destination.')
 
@@ -285,7 +293,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': ''.join(traceback.format_exception(exception)),
+                    'StringValue': '\n'.join(traceback.format_exception(exception)),
                 }
             })
         logging.debug('Failure notification sent.')
