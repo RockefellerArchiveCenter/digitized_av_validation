@@ -219,7 +219,7 @@ class Validator(object):
             copytree(Path(bag_path, 'data'), new_path)
         except FileExistsError:
             raise AlreadyExistsError(
-                f'A package with refid {self.refid} is already waiting tp be QCed.')
+                f'A package with refid {self.refid} is already waiting to be QCed.')
         logging.debug(
             f'All files in payload directory of {bag_path} moved to destination.')
 
