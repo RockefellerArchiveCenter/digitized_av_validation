@@ -333,4 +333,4 @@ def test_deliver_failure_notification():
     assert message_body['MessageAttributes']['outcome']['Value'] == 'FAILURE'
     assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
     assert message_body['MessageAttributes'][
-        'message']['Value'] == f'Exception: {exception_message}\n'
+        'message']['Value'] == f'{exception_message}\n\nException: {exception_message}\n'
