@@ -4,12 +4,12 @@ import re
 import subprocess
 import tarfile
 import traceback
-from datetime import datetime
 from pathlib import Path
 from shutil import copytree, rmtree
 
 import bagit
 import boto3
+from aws_assume_role_lib import assume_role
 
 logging.basicConfig(
     level=int(os.environ.get('LOGGING_LEVEL', logging.INFO)),
@@ -81,20 +81,9 @@ class Validator(object):
 
     def get_client_with_role(self, resource, role_arn):
         """Gets Boto3 client which authenticates with a specific IAM role."""
-        now = datetime.now()
-        timestamp = now.timestamp()
-        sts = boto3.client('sts', region_name=self.region)
-        role = sts.assume_role(
-            RoleArn=role_arn,
-            RoleSessionName=f'digitized-av-validation-{timestamp}')
-        credentials = role['Credentials']
-        client = boto3.client(
-            resource,
-            region_name=self.region,
-            aws_access_key_id=credentials['AccessKeyId'],
-            aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken'],)
-        return client
+        session = boto3.Session()
+        assumed_role_session = assume_role(session, role_arn)
+        return assumed_role_session.client(resource)
 
     def validate_refid(self, refid):
         valid = re.compile(r"^[a-zA-Z0-9]{32}$")
