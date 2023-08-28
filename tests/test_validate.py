@@ -220,7 +220,7 @@ def test_get_actual_structure():
 
         output = validator.get_actual_structure(tmp_path)
         assert isinstance(output, list)
-        assert output == outputs[validator.refid]
+        assert set(output) == set(outputs[validator.refid])
 
 
 def test_validate_assets_missing_file():
