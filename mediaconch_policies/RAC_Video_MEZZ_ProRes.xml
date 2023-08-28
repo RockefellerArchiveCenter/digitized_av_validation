@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<policy type="and" name="BAVC ProRes 422 HQ (Progressive)_copy">
+<policy type="and" name="RAC ProRes 422 HQ (Progressive) v2">
   <rule name="General/VideoCount is 1" value="VideoCount" tracktype="General" occurrence="*" operator="=">1</rule>
   <rule name="General/AudioCount is 1" value="AudioCount" tracktype="General" occurrence="*" operator="&lt;=">2</rule>
   <rule name="General/FileExtension is mov" value="FileExtension" tracktype="General" occurrence="*" operator="=">mov</rule>
@@ -13,14 +13,11 @@
   <rule name="Video/Format_Profile is 422 HQ" value="Format_Profile" tracktype="Video" occurrence="*" operator="=">422 HQ</rule>
   <rule name="Video/CodecID is apch" value="CodecID" tracktype="Video" occurrence="*" operator="=">apch</rule>
   <rule name="Video/BitRate_Mode is VBR" value="BitRate_Mode" tracktype="Video" occurrence="*" operator="=">VBR</rule>
-  <rule name="Video/Width is 720" value="Width" tracktype="Video" occurrence="*" operator="&lt;=">1920</rule>
-  <rule name="Video/Height is 486" value="Height" tracktype="Video" occurrence="*" operator="&lt;=">1080</rule>
-  <rule name="Video/DisplayAspectRatio is 1.333" value="DisplayAspectRatio" tracktype="Video" occurrence="*" operator="&lt;=">1.778</rule>
   <rule name="Video/FrameRate_Mode is CFR" value="FrameRate_Mode" tracktype="Video" occurrence="*" operator="=">CFR</rule>
   <rule name="Video/FrameRate is 29.970" value="FrameRate" tracktype="Video" occurrence="*" operator="=">29.970</rule>
   <rule name="Video/ColorSpace is YUV" value="ColorSpace" tracktype="Video" occurrence="*" operator="=">YUV</rule>
   <rule name="Video/ChromaSubsampling is 4:2:2" value="ChromaSubsampling" tracktype="Video" occurrence="*" operator="=">4:2:2</rule>
-  <rule name="Video/matrix_coefficients is BT.601" value="matrix_coefficients" tracktype="Video" occurrence="*" operator="&lt;=">BT.709</rule>
+  <rule name="Video/ScanType is Interlaced" value="ScanType" tracktype="Video" occurrence="*" operator="=">Progressive</rule>
   <rule name="Audio/Format is PCM" value="Format" tracktype="Audio" occurrence="*" operator="=">PCM</rule>
   <rule name="Audio/Format_Settings_Endianness is Little" value="Format_Settings_Endianness" tracktype="Audio" occurrence="*" operator="=">Little</rule>
   <rule name="Audio/Format_Settings_Sign is Signed" value="Format_Settings_Sign" tracktype="Audio" occurrence="*" operator="=">Signed</rule>
