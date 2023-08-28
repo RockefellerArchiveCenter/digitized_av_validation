@@ -106,6 +106,7 @@ def test_run_with_exception(mock_deliver, mock_cleanup, mock_refid):
 
 
 def test_validate_refid():
+    """Asserts refID is validated."""
     validator = Validator(*DEFAULT_ARGS)
     assert validator.validate_refid(validator.refid)
     with pytest.raises(RefidError):
@@ -161,6 +162,7 @@ def test_validate_bag():
 
 
 def test_validate_assets():
+    """Asserts assets are validated as expected."""
     for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
         fixture_path = Path("tests", "fixtures", validator.refid)
@@ -171,6 +173,7 @@ def test_validate_assets():
 
 
 def test_validate_assets_missing_file():
+    """Asserts exceptions encountered when validating assets are correctly handled."""
     for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
         fixture_path = Path("tests", "fixtures", validator.refid)
@@ -199,6 +202,7 @@ def test_get_policy():
 
 @patch('src.validate.subprocess.call')
 def test_validate_file_formats(mock_subprocess):
+    """Asserts file formats are validated as expected."""
     validator = Validator(*DEFAULT_ARGS)
     fixture_path = Path("tests", "fixtures", validator.refid)
     tmp_path = Path(validator.tmp_dir, validator.refid)
@@ -279,8 +283,11 @@ def test_cleanup_binaries():
 @mock_sns
 @mock_sqs
 @mock_sts
-def test_deliver_success_notification():
+@patch('src.validate.Validator.get_client_with_role')
+def test_deliver_success_notification(mock_role):
+    """Asserts success messages are delivered as expected."""
     sns = boto3.client('sns', region_name='us-east-1')
+    mock_role.return_value = sns
     topic_arn = sns.create_topic(Name='my-topic')['TopicArn']
     sqs_conn = boto3.resource("sqs", region_name="us-east-1")
     sqs_conn.create_queue(QueueName="test-queue")
@@ -307,8 +314,11 @@ def test_deliver_success_notification():
 @mock_sns
 @mock_sqs
 @mock_sts
-def test_deliver_failure_notification():
+@patch('src.validate.Validator.get_client_with_role')
+def test_deliver_failure_notification(mock_role):
+    """Asserts failure messages are delivered as expected."""
     sns = boto3.client('sns', region_name='us-east-1')
+    mock_role.return_value = sns
     topic_arn = sns.create_topic(Name='my-topic')['TopicArn']
     sqs_conn = boto3.resource("sqs", region_name="us-east-1")
     sqs_conn.create_queue(QueueName="test-queue")
