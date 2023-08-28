@@ -332,7 +332,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'{str(exception)}\n\n{tb}',
+                    'StringValue': f'{str(exception)}\n\n\n\n{tb}',
                 }
             })
         logging.debug('Failure notification sent.')
