@@ -406,4 +406,4 @@ def test_deliver_failure_notification(mock_role):
     assert message_body['MessageAttributes']['outcome']['Value'] == 'FAILURE'
     assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
     assert message_body['MessageAttributes'][
-        'message']['Value'] == f'{exception_message}\r\n\r\nException: {exception_message}\n'
+        'message']['Value'] == f'**{exception_message}**\r\n\r\nException: {exception_message}\n'
