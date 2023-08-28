@@ -10,8 +10,8 @@ import pytest
 from moto import mock_s3, mock_sns, mock_sqs, mock_sts
 from moto.core import DEFAULT_ACCOUNT_ID
 
-from src.validate import (AssetValidationError, FileFormatValidationError,
-                          RefidError, Validator)
+from src.validate import (AlreadyExistsError, AssetValidationError,
+                          FileFormatValidationError, RefidError, Validator)
 
 DEFAULT_ARGS = [
     'us-east-1',
@@ -59,7 +59,15 @@ def test_init():
     assert validator.tmp_dir == '/validation'
     assert validator.refid == 'b90862f3baceaae3b7418c78f9d50d52'
 
-    invalid_args = ['text', 'foo', 'bar', 'baz.tar.gz', 'tmp']
+    invalid_args = [
+        'us-east-1',
+        'digitized-av-role-arn',
+        'text',
+        'foo',
+        '/qc',
+        'b90862f3baceaae3b7418c78f9d50d52.tar.gz',
+        '/validation',
+        'topic']
     with pytest.raises(Exception):
         Validator(*invalid_args)
 
@@ -170,6 +178,51 @@ def test_validate_assets():
         validator.validate_assets(tmp_path)
 
 
+def test_get_expected_structure():
+    validator = Validator(*DEFAULT_ARGS)
+    master_file_map = [
+        (['foo'],
+         ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
+         'b90862f3baceaae3b7418c78f9d50d52_ma.wav']),
+        (['foo', 'bar'],
+         ['b90862f3baceaae3b7418c78f9d50d52_ma_1.wav',
+          'b90862f3baceaae3b7418c78f9d50d52_a_1.mp3',
+          'b90862f3baceaae3b7418c78f9d50d52_ma_2.wav',
+          'b90862f3baceaae3b7418c78f9d50d52_a_2.mp3'])]
+    for master_files, expected in master_file_map:
+        output = validator.get_expected_structure(master_files)
+        assert output == expected
+
+    validator = Validator(*VIDEO_ARGS)
+    expected = [
+        '20f8da26e268418ead4aa2365f816a08_ma.mkv',
+        '20f8da26e268418ead4aa2365f816a08_me.mov',
+        '20f8da26e268418ead4aa2365f816a08_a.mp4']
+    for master_files in (['foo'], ['foo', 'bar']):
+        output = validator.get_expected_structure(master_files)
+        assert output == expected
+
+
+def test_get_actual_structure():
+    outputs = {
+        'b90862f3baceaae3b7418c78f9d50d52':
+            ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
+             'b90862f3baceaae3b7418c78f9d50d52_ma.wav'],
+        '20f8da26e268418ead4aa2365f816a08':
+            ['20f8da26e268418ead4aa2365f816a08_me.mov',
+             '20f8da26e268418ead4aa2365f816a08_ma.mkv',
+             '20f8da26e268418ead4aa2365f816a08_a.mp4']}
+    for args in [DEFAULT_ARGS, VIDEO_ARGS]:
+        validator = Validator(*args)
+        fixture_path = Path("tests", "fixtures", validator.refid)
+        tmp_path = Path(validator.tmp_dir, validator.refid)
+        copytree(fixture_path, tmp_path)
+
+        output = validator.get_actual_structure(tmp_path)
+        assert isinstance(output, list)
+        assert set(output) == set(outputs[validator.refid])
+
+
 def test_validate_assets_missing_file():
     for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
@@ -234,6 +287,16 @@ def test_move_to_destination():
             validator.refid).glob('*'))
     assert len(expected_paths) == len(found)
     assert sorted(expected_paths) == sorted(found)
+
+
+@patch('src.validate.copytree')
+def test_move_to_destination_with_exception(mock_copytree):
+    """Asserts correct exception is raised by validator."""
+    mock_copytree.side_effect = FileExistsError()
+    validator = Validator(*DEFAULT_ARGS)
+    tmp_path = Path(validator.tmp_dir, validator.refid)
+    with pytest.raises(AlreadyExistsError):
+        validator.move_to_destination(tmp_path)
 
 
 @mock_s3

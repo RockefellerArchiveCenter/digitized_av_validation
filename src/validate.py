@@ -151,6 +151,55 @@ class Validator(object):
         bag.validate()
         logging.debug(f'Bag {bag_path} validated.')
 
+    def get_expected_structure(self, master_files):
+        """Return the files expected to be present in a bag's payload directory.
+
+        Returns:
+            expected_structure (list of strings): filenames expected to be present.
+        """
+        if self.format == 'audio':
+            if len(master_files) > 1:
+                expected_structure = []
+                for i in range(1, len(master_files) + 1):
+                    expected_structure.append(f"{self.refid}_ma_{i}.wav")
+                    expected_structure.append(f"{self.refid}_a_{i}.mp3")
+            else:
+                expected_structure = [
+                    f"{self.refid}_a.mp3",
+                    f"{self.refid}_ma.wav"]
+        elif self.format == 'video':
+            expected_structure = [
+                f"{self.refid}_ma.mkv",
+                f"{self.refid}_me.mov",
+                f"{self.refid}_a.mp4"]
+        return expected_structure
+
+    def get_actual_structure(self, bag_path):
+        """Return the files present in a bag's payload directory
+
+        Args:
+            bag_path (pathlib.Path): base directory of the bag
+
+        Returns:
+            actual_structure (list of strings): filenames found in bag dir
+        """
+        return [p.name for p in (bag_path / 'data').iterdir()]
+
+    def get_master_files(self, bag_path):
+        """Returns filepaths of master files in a bag.
+
+        Args:
+            bag_path (pathlib.Path): base directory of the bag
+
+        Returns:
+            master_files (list of pathlib.Path objects): filepaths of master files.
+        """
+        if self.format == 'audio':
+            master_files = (bag_path / 'data').glob('*.wav')
+        elif self.format == 'video':
+            master_files = (bag_path / 'data').glob('*.mkv')
+        return list(master_files)
+
     def validate_assets(self, bag_path):
         """Ensures that all expected files are present.
 
@@ -158,16 +207,16 @@ class Validator(object):
             bag_path (pathlib.Path): path of bagit Bag containing assets.
 
         Raises:
-            AssetValidationError if expected file is missing.
+            AssetValidationError if files delivered do not match expected files.
         """
-        suffix_map = [
-            ("ma.wav", "Master"), ("a.mp3", "Access")] if self.format == 'audio' else [
-            ("ma.mkv", "Master"), ("me.mov", "Mezzanine"), ("a.mp4", "Access")]
-        for suffix, filetype in suffix_map:
-            filename = f"{self.refid}_{suffix}"
-            if not Path(bag_path, 'data', filename).is_file():
-                raise AssetValidationError(
-                    f"{filetype} file {filename} missing.")
+        master_files = self.get_master_files(bag_path)
+        expected_files = self.get_expected_structure(master_files)
+        actual_files = self.get_actual_structure(bag_path)
+        if set(expected_files) != set(actual_files):
+            expected_files_display = '\n'.join(expected_files)
+            actual_files_display = '\n'.join(actual_files)
+            raise AssetValidationError(
+                f'The files delivered do not match what is expected.\n\nExpcted files:\n{expected_files_display}\n\nActual files:\n{actual_files_display}')
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def get_policy_path(self, filepath):
