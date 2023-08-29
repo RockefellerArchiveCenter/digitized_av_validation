@@ -51,6 +51,7 @@ class Validator(object):
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
         self.sns_topic = sns_topic
+        self.service_name = 'digitized_av_qc'
         if self.format not in ['audio', 'video']:
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
@@ -205,7 +206,7 @@ class Validator(object):
             expected_files_display = '\r\n'.join(sorted(expected_files))
             actual_files_display = '\r\n'.join(sorted(actual_files))
             raise AssetValidationError(
-                f'The files delivered do not match what is expected.\r\nExpected files:\r\n{expected_files_display}\r\n \r\nActual files:\r\n{actual_files_display}')
+                f'The files delivered do not match what is expected.\n\nExpected files:\n\n{expected_files_display}\n\n.\n\nActual files:\n\n{actual_files_display}')
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def get_policy_path(self, filepath):
@@ -293,7 +294,7 @@ class Validator(object):
                 },
                 'service': {
                     'DataType': 'String',
-                    'StringValue': 'digitized_av_validation',
+                    'StringValue': self.service_name,
                 },
                 'outcome': {
                     'DataType': 'String',
@@ -324,7 +325,7 @@ class Validator(object):
                 },
                 'service': {
                     'DataType': 'String',
-                    'StringValue': 'digitized_av_validation',
+                    'StringValue': self.service_name,
                 },
                 'outcome': {
                     'DataType': 'String',
@@ -332,7 +333,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'{str(exception)}\r\n \r\n{tb}',
+                    'StringValue': f'{str(exception)}\r\n.\r\n{tb}',
                 }
             })
         logging.debug('Failure notification sent.')
