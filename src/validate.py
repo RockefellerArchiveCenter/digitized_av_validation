@@ -148,10 +148,10 @@ class Validator(object):
         """
         if self.format == 'audio':
             if len(master_files) > 1:
-                expected_structure = []
+                expected_structure = [f"{self.refid}_a.mp3"]
                 for i in range(1, len(master_files) + 1):
-                    expected_structure.append(f"{self.refid}_ma_{i}.wav")
-                    expected_structure.append(f"{self.refid}_a_{i}.mp3")
+                    expected_structure.append(
+                        f"{self.refid}_ma_{str(i).zfill(2)}.wav")
             else:
                 expected_structure = [
                     f"{self.refid}_a.mp3",
@@ -202,10 +202,10 @@ class Validator(object):
         expected_files = self.get_expected_structure(master_files)
         actual_files = self.get_actual_structure(bag_path)
         if set(expected_files) != set(actual_files):
-            expected_files_display = '\n'.join(expected_files)
-            actual_files_display = '\n'.join(actual_files)
+            expected_files_display = '\r\n'.join(sorted(expected_files))
+            actual_files_display = '\r\n'.join(sorted(actual_files))
             raise AssetValidationError(
-                f'The files delivered do not match what is expected.\n\nExpcted files:\n{expected_files_display}\n\nActual files:\n{actual_files_display}')
+                f'The files delivered do not match what is expected.\r\nExpected files:\r\n{expected_files_display}\r\n \r\nActual files:\r\n{actual_files_display}')
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def get_policy_path(self, filepath):
@@ -332,7 +332,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'**{str(exception)}**\r\n\r\n{tb}',
+                    'StringValue': f'{str(exception)}\r\n \r\n{tb}',
                 }
             })
         logging.debug('Failure notification sent.')

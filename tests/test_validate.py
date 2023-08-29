@@ -187,10 +187,9 @@ def test_get_expected_structure():
          ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
          'b90862f3baceaae3b7418c78f9d50d52_ma.wav']),
         (['foo', 'bar'],
-         ['b90862f3baceaae3b7418c78f9d50d52_ma_1.wav',
-          'b90862f3baceaae3b7418c78f9d50d52_a_1.mp3',
-          'b90862f3baceaae3b7418c78f9d50d52_ma_2.wav',
-          'b90862f3baceaae3b7418c78f9d50d52_a_2.mp3'])]
+         ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
+          'b90862f3baceaae3b7418c78f9d50d52_ma_01.wav',
+          'b90862f3baceaae3b7418c78f9d50d52_ma_02.wav'])]
     for master_files, expected in master_file_map:
         output = validator.get_expected_structure(master_files)
         assert output == expected
@@ -406,4 +405,4 @@ def test_deliver_failure_notification(mock_role):
     assert message_body['MessageAttributes']['outcome']['Value'] == 'FAILURE'
     assert message_body['MessageAttributes']['refid']['Value'] == validator.refid
     assert message_body['MessageAttributes'][
-        'message']['Value'] == f'**{exception_message}**\r\n\r\nException: {exception_message}\n'
+        'message']['Value'] == f'{exception_message}\r\n \r\nException: {exception_message}\n'
