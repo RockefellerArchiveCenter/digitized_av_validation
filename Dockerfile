@@ -4,6 +4,7 @@ WORKDIR /code
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY src src
+COPY mediaconch_policies mediaconch_policies
 
 FROM base as test
 COPY test_requirements.txt .coveragerc ./
