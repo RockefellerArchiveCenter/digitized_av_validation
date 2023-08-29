@@ -239,12 +239,18 @@ class Validator(object):
         """
         for f in bag_path.glob('data/*'):
             policy_path = self.get_policy_path(f)
-            result = subprocess.call(
-                ['mediaconch', '-p', policy_path, '-fs', f])
-            if result != 0:
-                error = subprocess.call(['mediaconch', f])
+            process = subprocess.Popen(['mediaconch',
+                                        '-p',
+                                        policy_path,
+                                        '-fs',
+                                        f],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+            out, _ = process.communicate()
+            result = out.decode()
+            if result.startswith('fail!'):
                 raise FileFormatValidationError(
-                    f"{str(f)} is not valid according to format policy: {error}")
+                    f"{str(f)} is not valid according to format policy: {result}")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):

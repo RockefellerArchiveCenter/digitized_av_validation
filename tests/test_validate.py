@@ -252,7 +252,7 @@ def test_get_policy():
         validator.get_policy_path(Path("foo.txt"))
 
 
-@patch('src.validate.subprocess.call')
+@patch('src.validate.subprocess.Popen.communicate')
 def test_validate_file_formats(mock_subprocess):
     """Asserts file formats are validated as expected."""
     validator = Validator(*DEFAULT_ARGS)
@@ -260,11 +260,11 @@ def test_validate_file_formats(mock_subprocess):
     tmp_path = Path(validator.tmp_dir, validator.refid)
     copytree(fixture_path, tmp_path)
 
-    mock_subprocess.return_value = 0
+    mock_subprocess.return_value = (b'pass! Everything is cool!', b'')
     validator.validate_file_formats(tmp_path)
 
-    error_string = "This is an error!"
-    mock_subprocess.side_effect = [1, error_string]
+    error_string = "fail! This is an error!"
+    mock_subprocess.return_value = (b'fail! This is an error!', b'')
     with pytest.raises(FileFormatValidationError):
         error = validator.validate_file_formats(tmp_path)
         assert error_string in error
