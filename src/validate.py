@@ -51,7 +51,7 @@ class Validator(object):
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
         self.sns_topic = sns_topic
-        self.service_name = 'digitized_av_qc'
+        self.service_name = 'digitized_av_validation'
         if self.format not in ['audio', 'video']:
             raise Exception(f"Cannot process file with format {self.format}.")
         if not Path(self.tmp_dir).is_dir():
