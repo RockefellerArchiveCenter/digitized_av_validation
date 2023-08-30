@@ -203,10 +203,10 @@ class Validator(object):
         expected_files = self.get_expected_structure(master_files)
         actual_files = self.get_actual_structure(bag_path)
         if set(expected_files) != set(actual_files):
-            expected_files_display = '\n\n'.join(sorted(expected_files))
-            actual_files_display = '\n\n'.join(sorted(actual_files))
+            expected_files_display = '<br>'.join(sorted(expected_files))
+            actual_files_display = '<br>'.join(sorted(actual_files))
             raise AssetValidationError(
-                f'The files delivered do not match what is expected.\n\nExpected files:\n\n{expected_files_display}\n\n\n\nActual files:\n\n{actual_files_display}')
+                f'The files delivered do not match what is expected.<br><br>Expected files:<br>{expected_files_display}<br><br>Actual files:<br>{actual_files_display}')
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def get_policy_path(self, filepath):
@@ -339,7 +339,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'{str(exception)}\n\n.\n\n{tb}',
+                    'StringValue': f'{str(exception)}<br><br>{tb}',
                 }
             })
         logging.debug('Failure notification sent.')
