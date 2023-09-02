@@ -258,8 +258,9 @@ class Validator(object):
                                                   stdout=subprocess.PIPE,
                                                   stderr=subprocess.PIPE)
                 out, _ = report_process.communicate()
+                report = out.decode().replace('\n', '<br>')
                 raise FileFormatValidationError(
-                    f"{str(f)} is not valid according to format policy: {out.decode()}")
+                    f"{str(f)} is not valid according to format policy: {report}")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):
