@@ -243,9 +243,9 @@ def test_get_policy():
     """Asserts correct policies are fetched."""
     validator = Validator(*DEFAULT_ARGS)
     for fp, expected_path in [
-            ('bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml'),
-            ('/foo/bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml'),
-            ('/foo/buzz_baz/bar_a.mp3', 'mediaconch_policies/RAC_Audio_A_MP3.xml')]:
+            ('bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/buzz_baz/bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml')]:
         assert validator.get_policy_path(Path(fp)) == expected_path
 
     with pytest.raises(FileFormatValidationError):

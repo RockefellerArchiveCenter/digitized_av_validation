@@ -226,7 +226,7 @@ class Validator(object):
                 'ma.mkv': 'RAC_Video_MA_FFV1MKV.xml',
                 'me.mov': 'RAC_Video_MEZZ_ProRes.xml', }
             policy = policy_map[str(filepath).split('_')[-1]]
-            return str(Path('mediaconch_policies', policy))
+            return str(Path('mediaconch', 'policies', policy))
         except KeyError:
             raise FileFormatValidationError(
                 f'No Mediaconch policy found for file {filepath}.')
@@ -247,10 +247,19 @@ class Validator(object):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
             out, _ = process.communicate()
-            result = out.decode()
-            if result.startswith('fail!'):
+            if out.decode().startswith('fail!'):
+                display_path = str(Path('mediaconch', 'display.xsl'))
+                report_process = subprocess.Popen(['mediaconch',
+                                                   '-p',
+                                                   policy_path,
+                                                   '-d',
+                                                   display_path,
+                                                   f],
+                                                  stdout=subprocess.PIPE,
+                                                  stderr=subprocess.PIPE)
+                out, _ = report_process.communicate()
                 raise FileFormatValidationError(
-                    f"{str(f)} is not valid according to format policy: {result}")
+                    f"{str(f)} is not valid according to format policy: {out.decode()}")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):
