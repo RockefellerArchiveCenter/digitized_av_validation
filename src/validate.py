@@ -149,19 +149,19 @@ class Validator(object):
         """
         if self.format == 'audio':
             if len(master_files) > 1:
-                expected_structure = [f"{self.refid}_a.mp3"]
+                expected_structure = [f"{self.refid}.mp3"]
                 for i in range(1, len(master_files) + 1):
                     expected_structure.append(
-                        f"{self.refid}_ma_{str(i).zfill(2)}.wav")
+                        f"{self.refid}_{str(i).zfill(2)}.wav")
             else:
                 expected_structure = [
-                    f"{self.refid}_a.mp3",
-                    f"{self.refid}_ma.wav"]
+                    f"{self.refid}.mp3",
+                    f"{self.refid}.wav"]
         elif self.format == 'video':
             expected_structure = [
-                f"{self.refid}_ma.mkv",
-                f"{self.refid}_me.mov",
-                f"{self.refid}_a.mp4"]
+                f"{self.refid}.mkv",
+                f"{self.refid}.mov",
+                f"{self.refid}.mp4"]
         return expected_structure
 
     def get_actual_structure(self, bag_path):
@@ -220,12 +220,12 @@ class Validator(object):
         """
         try:
             policy_map = {
-                'a.mp3': 'RAC_Audio_A_MP3.xml',
-                'ma.wav': 'RAC_Audio_MA_WAV.xml',
-                'a.mp4': 'RAC_Video_A_MP4.xml',
-                'ma.mkv': 'RAC_Video_MA_FFV1MKV.xml',
-                'me.mov': 'RAC_Video_MEZZ_ProRes.xml', }
-            policy = policy_map[str(filepath).split('_')[-1]]
+                '.mp3': 'RAC_Audio_A_MP3.xml',
+                '.wav': 'RAC_Audio_MA_WAV.xml',
+                '.mp4': 'RAC_Video_A_MP4.xml',
+                '.mkv': 'RAC_Video_MA_FFV1MKV.xml',
+                '.mov': 'RAC_Video_MEZZ_ProRes.xml', }
+            policy = policy_map[filepath.suffix]
             return str(Path('mediaconch', 'policies', policy))
         except KeyError:
             raise FileFormatValidationError(

@@ -32,8 +32,8 @@ This validator expects to receive valid BagIt bags serialized as a single `.tar.
     manifest-sha512.txt
     manifest-sha256.txt
     data/
-        refid_a.mp3
-        refid_ma.wav
+        refid.mp3
+        refid.wav
 ```
 
 #### Video packages
@@ -46,9 +46,24 @@ This validator expects to receive valid BagIt bags serialized as a single `.tar.
     manifest-sha512.txt
     manifest-sha256.txt
     data/
-        refid_a.mp4
-        refid_ma.mkv
-        refid_me.mov
+        refid.mp4
+        refid.mkv
+        refid.mov
+```
+
+#### Packages with multiple master files
+```
+/refid
+    tagmanifest-sha512.txt
+    tagmanifest-sha256.txt
+    bag-info.txt
+    bagit.txt
+    manifest-sha512.txt
+    manifest-sha256.txt
+    data/
+        refid.mp3
+        refid_01.wav
+        refid_02.wav
 ```
 
 ## License
