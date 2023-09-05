@@ -184,21 +184,21 @@ def test_get_expected_structure():
     validator = Validator(*DEFAULT_ARGS)
     master_file_map = [
         (['foo'],
-         ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
-         'b90862f3baceaae3b7418c78f9d50d52_ma.wav']),
+         ['b90862f3baceaae3b7418c78f9d50d52.mp3',
+         'b90862f3baceaae3b7418c78f9d50d52.wav']),
         (['foo', 'bar'],
-         ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
-          'b90862f3baceaae3b7418c78f9d50d52_ma_01.wav',
-          'b90862f3baceaae3b7418c78f9d50d52_ma_02.wav'])]
+         ['b90862f3baceaae3b7418c78f9d50d52.mp3',
+          'b90862f3baceaae3b7418c78f9d50d52_01.wav',
+          'b90862f3baceaae3b7418c78f9d50d52_02.wav'])]
     for master_files, expected in master_file_map:
         output = validator.get_expected_structure(master_files)
         assert output == expected
 
     validator = Validator(*VIDEO_ARGS)
     expected = [
-        '20f8da26e268418ead4aa2365f816a08_ma.mkv',
-        '20f8da26e268418ead4aa2365f816a08_me.mov',
-        '20f8da26e268418ead4aa2365f816a08_a.mp4']
+        '20f8da26e268418ead4aa2365f816a08.mkv',
+        '20f8da26e268418ead4aa2365f816a08.mov',
+        '20f8da26e268418ead4aa2365f816a08.mp4']
     for master_files in (['foo'], ['foo', 'bar']):
         output = validator.get_expected_structure(master_files)
         assert output == expected
@@ -207,12 +207,12 @@ def test_get_expected_structure():
 def test_get_actual_structure():
     outputs = {
         'b90862f3baceaae3b7418c78f9d50d52':
-            ['b90862f3baceaae3b7418c78f9d50d52_a.mp3',
-             'b90862f3baceaae3b7418c78f9d50d52_ma.wav'],
+            ['b90862f3baceaae3b7418c78f9d50d52.mp3',
+             'b90862f3baceaae3b7418c78f9d50d52.wav'],
         '20f8da26e268418ead4aa2365f816a08':
-            ['20f8da26e268418ead4aa2365f816a08_me.mov',
-             '20f8da26e268418ead4aa2365f816a08_ma.mkv',
-             '20f8da26e268418ead4aa2365f816a08_a.mp4']}
+            ['20f8da26e268418ead4aa2365f816a08.mov',
+             '20f8da26e268418ead4aa2365f816a08.mkv',
+             '20f8da26e268418ead4aa2365f816a08.mp4']}
     for args in [DEFAULT_ARGS, VIDEO_ARGS]:
         validator = Validator(*args)
         fixture_path = Path("tests", "fixtures", validator.refid)
@@ -243,9 +243,9 @@ def test_get_policy():
     """Asserts correct policies are fetched."""
     validator = Validator(*DEFAULT_ARGS)
     for fp, expected_path in [
-            ('bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
-            ('/foo/bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
-            ('/foo/buzz_baz/bar_a.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml')]:
+            ('bar.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/bar.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml'),
+            ('/foo/buzz_baz/bar.mp3', 'mediaconch/policies/RAC_Audio_A_MP3.xml')]:
         assert validator.get_policy_path(Path(fp)) == expected_path
 
     with pytest.raises(FileFormatValidationError):
@@ -271,7 +271,7 @@ def test_validate_file_formats(mock_subprocess):
 
 
 def test_move_to_destination():
-    """Asserts correct file are moved to correct location."""
+    """Asserts correct files are moved to correct location."""
     validator = Validator(*DEFAULT_ARGS)
     fixture_path = Path(
         "tests",
@@ -282,8 +282,32 @@ def test_move_to_destination():
 
     validator.move_to_destination(tmp_path)
     expected_paths = [
-        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_a.mp3",
-        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_ma.wav"]
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}.mp3",
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}.wav"]
+    found = list(
+        str(p) for p in Path(
+            validator.destination_dir,
+            validator.refid).glob('*'))
+    assert len(expected_paths) == len(found)
+    assert sorted(expected_paths) == sorted(found)
+
+
+def test_move_to_destination_multiple_masters():
+    """Asserts correct file are moved to correct location when multiple masters are present."""
+    validator = Validator(*DEFAULT_ARGS)
+    validator.refid = 'b90862f3baceaae3b7418c78f9d50d53'
+    fixture_path = Path(
+        "tests",
+        "fixtures",
+        "b90862f3baceaae3b7418c78f9d50d53")
+    tmp_path = Path(validator.tmp_dir, validator.refid)
+    copytree(fixture_path, tmp_path)
+
+    validator.move_to_destination(tmp_path)
+    expected_paths = [
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}.mp3",
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_01.wav",
+        f"{validator.destination_dir}/{validator.refid}/{validator.refid}_02.wav"]
     found = list(
         str(p) for p in Path(
             validator.destination_dir,
