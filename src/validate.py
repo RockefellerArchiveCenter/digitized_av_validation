@@ -258,9 +258,9 @@ class Validator(object):
                                                   stdout=subprocess.PIPE,
                                                   stderr=subprocess.PIPE)
                 out, _ = report_process.communicate()
-                report = out.decode().replace('\n', '<br>')
+                report = out.decode()
                 raise FileFormatValidationError(
-                    f"{str(f)} is not valid according to format policy: {report}")
+                    f"{str(f)} is not valid according to format policy\n\n{report}")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):
@@ -349,7 +349,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': re.escape(f'{str(exception)}<br><br>{tb}'),
+                    'StringValue': f'{str(exception)}<br><br>{tb}',
                 }
             })
         logging.debug('Failure notification sent.')
