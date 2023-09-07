@@ -350,7 +350,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': json.dumps(f'{str(exception)}\n\n<pre>{tb}</pre>'),
+                    'StringValue': f'{str(exception)}\n\n<pre>{json.dumps(tb)}</pre>',
                 }
             })
         logging.debug('Failure notification sent.')
