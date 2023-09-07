@@ -326,7 +326,7 @@ class Validator(object):
             exception (Exception): the exception that was thrown.
         """
         client = self.get_client_with_role('sns', self.role_arn)
-        tb = '\n'.join(traceback.format_exception(exception)[:-1])
+        tb = ''.join(traceback.format_exception(exception)[:-1])
         client.publish(
             TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} is invalid',
