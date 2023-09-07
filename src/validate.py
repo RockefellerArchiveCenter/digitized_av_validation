@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -203,10 +204,10 @@ class Validator(object):
         expected_files = self.get_expected_structure(master_files)
         actual_files = self.get_actual_structure(bag_path)
         if set(expected_files) != set(actual_files):
-            expected_files_display = '<br>'.join(sorted(expected_files))
-            actual_files_display = '<br>'.join(sorted(actual_files))
+            expected_files_display = '\n'.join(sorted(expected_files))
+            actual_files_display = '\n'.join(sorted(actual_files))
             raise AssetValidationError(
-                f'The files delivered do not match what is expected.<br><br>Expected files:<br>{expected_files_display}<br><br>Actual files:<br>{actual_files_display}')
+                f'The files delivered do not match what is expected.\n\nExpected files:\n<pre>{expected_files_display}</pre>\n\nActual files:\n<pre>{actual_files_display}</pre>')
         logging.debug(f'Package {bag_path} contains all expected assets.')
 
     def get_policy_path(self, filepath):
@@ -260,7 +261,7 @@ class Validator(object):
                 out, _ = report_process.communicate()
                 report = out.decode()
                 raise FileFormatValidationError(
-                    f"{str(f)} is not valid according to format policy\n\n{report}")
+                    f"{str(f)} is not valid according to format policy\n<pre>{report}</pre>")
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):
@@ -326,7 +327,7 @@ class Validator(object):
             exception (Exception): the exception that was thrown.
         """
         client = self.get_client_with_role('sns', self.role_arn)
-        tb = '<br><br>'.join(traceback.format_exception(exception))
+        tb = '\n'.join(traceback.format_exception(exception)[:-1])
         client.publish(
             TopicArn=self.sns_topic,
             Message=f'{self.format} package {self.source_filename} is invalid',
@@ -349,7 +350,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'{str(exception)}<br><br>{tb}',
+                    'StringValue': json.dumps(f'{str(exception)}\n\n<pre>{tb}</pre>'),
                 }
             })
         logging.debug('Failure notification sent.')
