@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import re
@@ -350,7 +349,7 @@ class Validator(object):
                 },
                 'message': {
                     'DataType': 'String',
-                    'StringValue': f'{str(exception)}\n\n<pre>{json.dumps(tb)}</pre>',
+                    'StringValue': f'{str(exception)}\n\n<pre>{tb}</pre>',
                 }
             })
         logging.debug('Failure notification sent.')
