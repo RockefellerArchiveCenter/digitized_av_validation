@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<policy type="and" name="PARADISEC Audio is 96kHz/24bit, stereo_copy" license="CC-BY-SA-4.0+">
-  <description>This policy checks if WAV file conforms to PARADISEC's target WAV for archiving digital audio.</description>
-  <rule name="Sampling Rate" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">96000</rule>
-  <rule name="Bitrate" value="BitDepth" tracktype="Audio" occurrence="*" operator="=">24</rule>
-  <rule name="Channels" value="Channels" tracktype="Audio" occurrence="*" operator="&lt;=">2</rule>
-</policy>

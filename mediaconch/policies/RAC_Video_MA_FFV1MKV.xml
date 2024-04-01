@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<policy type="and" name="NYPL_FFV1MKV" license="CC-BY-SA-4.0+">
+<policy type="and" name="RAC FFV1 MKV" license="CC-BY-SA-4.0+">
+  <tag/>
   <rule name="Is it Matroska?" value="Format" tracktype="General" occurrence="*" operator="=">Matroska</rule>
   <rule name="Matroska version 4 or greater?" value="Format_Version" tracktype="General" occurrence="*" operator="&gt;=">4</rule>
   <rule name="Unique ID is present?" value="UniqueID" tracktype="General" occurrence="*" operator="exists"/>
