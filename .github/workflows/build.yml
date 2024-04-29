@@ -1,0 +1,40 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - development
+      - base
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: development
+
+    env:
+      APP_NAME: digitized_av_validation
+
+    steps:
+      - name: Get current date and time
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.APP_NAME }} --target build .
+
+      - name: Clone deploy scripts
+        run: |
+          if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
+
+      - name: Deploy to ECR (development)
+        if: github.ref == 'refs/heads/development'
+        run: |
+          bash deploy_scripts/containers/push_image_to_ecr.sh ${{ env.APP_NAME }}
+
+      - name: Tag image for production (base branch)
+        if: github.ref == 'refs/heads/base'
+        run: |
+          bash deploy_scripts/containers/add_tag_to_image.sh ${{ env.APP_NAME }} dev prod
