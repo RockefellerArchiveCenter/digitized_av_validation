@@ -54,8 +54,8 @@ jobs:
 
       - name: Tag and push latest to ECR
         run: |
-          docker tag ${{ env.APP_NAME }} ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
+          docker tag ${{ env.APP_NAME }} ${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
 
       #- name: Tag and push dev to ECR
       #  run: |
