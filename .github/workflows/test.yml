@@ -7,12 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     environment:
       name: development
 
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
