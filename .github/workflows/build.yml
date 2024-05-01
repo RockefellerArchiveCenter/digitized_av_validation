@@ -5,6 +5,7 @@ on:
     branches:
       - development
       - base
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,20 +22,46 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
+      - name: Set environment variables
+        run: |
+          echo "TARGET_IMAGE_LATEST=${{ secrets.TARGET_IMAGE }}:latest" >> $GITHUB_ENV
+          echo "TARGET_IMAGE_DEV=${{ secrets.TARGET_IMAGE }}:dev" >> $GITHUB_ENV
+          echo "TARGET_IMAGE_VERSIONED=${{ secrets.TARGET_IMAGE }}:${{ steps.date.outputs.date }}-${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 1000
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Build Docker image
         run: |
           docker build -t ${{ env.APP_NAME }} --target build .
 
-      - name: Clone deploy scripts
-        run: |
-          if [ ! -d deploy_scripts ]; then git clone https://github.com/RockefellerArchiveCenter/deploy_scripts.git; fi
+      - name: Login to ECR
+        run: aws ecr get-login --no-include-email
 
-      - name: Deploy to ECR (development)
-        if: github.ref == 'refs/heads/development'
+      - name: Tag and push latest to ECR
         run: |
-          bash deploy_scripts/containers/push_image_to_ecr.sh ${{ env.APP_NAME }}
+          docker tag ${{ env.APP_NAME }} ${{ env.TARGET_IMAGE_LATEST }}
+          docker push ${{ env.TARGET_IMAGE_LATEST }}
+
+      - name: Tag and push dev to ECR
+        run: |
+          docker tag ${{ env.APP_NAME }} ${{ env.TARGET_IMAGE_DEV }}
+          docker push ${{ env.TARGET_IMAGE_DEV }}
+
+      - name: Tag and push versioned image to ECR
+        run: |
+          docker tag ${{ env.APP_NAME }} ${{ env.TARGET_IMAGE_VERSIONED }}
+          docker push ${TARGET_IMAGE_VERSIONED}
 
       - name: Tag image for production (base branch)
         if: github.ref == 'refs/heads/base'
         run: |
-          bash deploy_scripts/containers/add_tag_to_image.sh ${{ env.APP_NAME }} dev prod
+          echo "MANIFEST=aws ecr batch-get-image --repository-name ${{ env.APP_NAME }} --image-ids imageTag=dev --output json | jq --raw-output --join-output '.images[0].imageManifest')" >> $GITHUB_ENV
+          aws ecr put-image --repository-name ${{ env.APP_NAME }} --image-tag prod --image-manifest ${{ env.MANIFEST }}
