@@ -34,11 +34,16 @@ jobs:
           role-duration-seconds: 1000
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2.0.1
-        with:
-          registries: ${{ secrets.AWS_ACCOUNT_ID }}
+      #- name: Login to Amazon ECR
+      #  id: login-ecr
+      #  uses: aws-actions/amazon-ecr-login@v2.0.1
+      #  with:
+      #    registries: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Login test
+        run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+        docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/digitized_av_validation::latest
 
       - name: Set environment variables
         run: |
@@ -46,13 +51,13 @@ jobs:
           echo "TARGET_IMAGE_DEV=${{ secrets.TARGET_IMAGE }}:dev" >> $GITHUB_ENV
           echo "TARGET_IMAGE_VERSIONED=${{ secrets.TARGET_IMAGE }}:${{ env.DATE }}-${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Build Docker image
-        run: docker build -t ${{ env.APP_NAME }} --target build .
+      #- name: Build Docker image
+      #  run: docker build -t ${{ env.APP_NAME }} --target build .
 
-      - name: Tag and push latest to ECR
-        run: |
-          docker tag ${{ env.APP_NAME }} ${{ secrets.ECR_REPOSITORY }}:latest
-          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+      #- name: Tag and push latest to ECR
+      #  run: |
+      #    docker tag ${{ env.APP_NAME }} ${{ secrets.ECR_REPOSITORY }}:latest
+      #    docker push ${{ secrets.ECR_REPOSITORY }}:latest
 
       #- name: Tag and push dev to ECR
       #  run: |
