@@ -58,7 +58,7 @@ jobs:
       - name: Tag and push versioned image to ECR
         run: |
           docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
 
       - name: Tag image for production (base branch)
         if: github.ref == 'refs/heads/base'
