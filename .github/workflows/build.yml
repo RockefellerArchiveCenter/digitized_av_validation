@@ -39,7 +39,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DATE=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%Y%m%dT%H%M%S')" >> $GITHUB_ENV
           echo "TARGET_IMAGE_VERSIONED=${{ secrets.TARGET_IMAGE }}:${{ env.DATE }}-${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Build Docker image
