@@ -38,7 +38,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
         with:
-          registries: "${{ secrets.AWS_ACCOUNT_ID }}, ${{ secrets.DEV_ACCOUNT_ID }}"
+          registries: "${{ secrets.AWS_ACCOUNT_ID }}"
 
       - name: Set environment variables
         run: |
