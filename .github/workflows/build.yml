@@ -43,7 +43,7 @@ jobs:
       - name: Login test
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/digitized_av_validation::latest
+          aws ecr list-images --repository-name digitized_av_validation
 
       - name: Set environment variables
         run: |
