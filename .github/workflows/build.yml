@@ -21,6 +21,9 @@ jobs:
       APP_NAME: digitized_av_validation
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Get current date and time
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
@@ -43,7 +46,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f ./Dockerfile -t ${{ env.APP_NAME }} --target build .
+          docker build -t ${{ env.APP_NAME }} --target build .
 
       - name: Login to ECR
         run: aws ecr get-login --no-include-email
