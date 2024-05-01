@@ -57,7 +57,7 @@ jobs:
       - name: Tag and push latest to ECR
         run: |
           docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}"/"${{ env.APP_NAME }}":latest
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}"/"{{ env.APP_NAME }}":latest
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}"/"${{ env.APP_NAME }}":latest
 
       #- name: Tag and push dev to ECR
       #  run: |
