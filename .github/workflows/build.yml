@@ -38,7 +38,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
         with:
-          registries: "${{ secrets.DEV_ACCOUNT_ID }}"
+          registries: "${{ secrets.ACCOUNT_ID }}, ${{ secrets.DEV_ACCOUNT_ID }}"
 
       - name: Set environment variables
         run: |
@@ -51,8 +51,8 @@ jobs:
 
       - name: Tag and push latest to ECR
         run: |
-          docker tag ${{ env.APP_NAME }} ${{ secrets.DEV_ECR_REPOSITORY }}:latest
-          docker push ${{ secrets.DEV_ECR_REPOSITORY }}:latest
+          docker tag ${{ env.APP_NAME }} ${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
 
       #- name: Tag and push dev to ECR
       #  run: |
