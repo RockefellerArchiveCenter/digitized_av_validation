@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.APP_NAME }} --target build ./Dockerfile
+          docker build -f ./Dockerfile -t ${{ env.APP_NAME }} --target build .
 
       - name: Login to ECR
         run: aws ecr get-login --no-include-email
