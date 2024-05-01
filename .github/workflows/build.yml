@@ -65,4 +65,4 @@ jobs:
         run: |
           MANIFEST=$(aws ecr batch-get-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-ids imageTag=dev --output json | jq -c --join-output '.images[0].imageManifest')
           echo "$MANIFEST"
-        #  aws ecr put-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-tag prod --image-manifest "$MANIFEST"
+          aws ecr put-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-tag prod --image-manifest "$MANIFEST"
