@@ -35,7 +35,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        run: aws ecr get-login --no-include-email --registry-ids {{ secrets.AWS_ACCOUNT_ID }} --region {{ secrets.AWS_REGION }}
+        run: aws ecr get-login --registry-ids {{ secrets.AWS_ACCOUNT_ID }} --region {{ secrets.AWS_REGION }}
         #id: login-ecr
         #uses: aws-actions/amazon-ecr-login@v2.0.1
         #with:
