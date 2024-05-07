@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: development
+      name: ${{ github.ref_name }}
 
     env:
       APP_NAME: digitized_av_validation
