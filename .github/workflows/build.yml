@@ -1,0 +1,66 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - development
+      - base
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.ref_name }}
+
+    env:
+      APP_NAME: digitized_av_validation
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 900
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: ECR login
+        run: aws ecr get-login-password --region {{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Set environment variables
+        run: |
+          echo "DATE=$(date +'%Y%m%dT%H%M%S')" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.APP_NAME }} --target build .
+
+      - name: Tag and push latest to ECR
+        if: github.ref == 'refs/heads/base'
+        run: |
+          docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":latest
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":latest
+
+      - name: Tag and push dev to ECR
+        if: github.ref == 'refs/heads/development'
+        run: |
+          docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":dev
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":dev
+
+      - name: Tag and push versioned image to ECR
+        if: github.ref == 'refs/heads/development'
+        run: |
+          docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
+
+      - name: Tag image for production (base branch)
+        if: github.ref == 'refs/heads/base'
+        run: |
+          MANIFEST=$(aws ecr batch-get-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-ids imageTag=dev --output json | jq -c --join-output '.images[0].imageManifest')
+          aws ecr put-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-tag prod --image-manifest "$MANIFEST"
