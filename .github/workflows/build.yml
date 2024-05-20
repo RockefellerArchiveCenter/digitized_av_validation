@@ -31,8 +31,8 @@ jobs:
           role-duration-seconds: 900
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: ECR login
-        run: aws ecr get-login-password --region {{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2.0.1
 
       - name: Set environment variables
         run: |
