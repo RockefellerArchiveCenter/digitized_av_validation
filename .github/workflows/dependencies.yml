@@ -18,6 +18,13 @@ jobs:
         with:
           ref: development
 
+      - name: Run GitHub Actions Version Updater
+        uses: saadmk11/github-actions-version-updater@v0.8.1
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          update_version_with: 'release-tag'
+          skip_pull_request: 'false'
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -32,13 +39,6 @@ jobs:
 
       - name: Run pip-compile
         run: pip-compile --upgrade
-
-      - name: Run GitHub Actions Version Updater
-        uses: saadmk11/github-actions-version-updater@v0.8.1
-        with:
-          token: ${{ secrets.ACCESS_TOKEN }}
-          update_version_with: 'release-tag'
-          skip_pull_request: 'false'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6.0.1
