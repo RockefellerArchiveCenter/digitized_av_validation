@@ -21,11 +21,13 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Run GitHub Actions Version Updater
-        uses: saadmk11/github-actions-version-updater@v0.7.4
+        uses: saadmk11/github-actions-version-updater@main
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           update_version_with: 'release-tag'
           skip_pull_request: 'false'
+          pull_request_branch: 'dependency-updates'
+          ignore: 'saadmk11/github-actions-version-updater@main'
 
       - name: Set up Python
         uses: actions/setup-python@v4
