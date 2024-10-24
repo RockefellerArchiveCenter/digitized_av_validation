@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: ${{ vars.DEV_ENVIRONMENT }}
+      name: development
 
     steps:
       - name: Checkout Repository
@@ -21,14 +21,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            $HOME/.cache/pip
-            $HOME/.cache/pre-commit
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*.lock') }}
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
