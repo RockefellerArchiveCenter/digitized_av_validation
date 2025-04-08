@@ -36,33 +36,22 @@ jobs:
         with:
           registries: ${{ secrets.ECR_REGISTRIES }}
 
-      - name: Set environment variables
+      - name: Set environment variable for current date
         run: |
           echo "DATE=$(date +'%Y%m%dT%H%M%S')" >> $GITHUB_ENV
-
-      - name: Build Docker image
-        run: docker build -t ${{ env.APP_NAME }} --target build .
-
-      - name: Tag and push latest to ECR
-        if: github.ref == 'refs/heads/base'
-        run: |
-          docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":latest
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":latest
-
-      - name: Tag and push dev to ECR
+  
+      - name: Build and push Docker images with dev and versioned tags
         if: github.ref == 'refs/heads/development'
         run: |
+          docker build -t ${{ env.APP_NAME }} --target build .
           docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":dev
           docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":dev
-
-      - name: Tag and push versioned image to ECR
-        if: github.ref == 'refs/heads/development'
-        run: |
           docker tag ${{ env.APP_NAME }} "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
           docker push "${{ secrets.AWS_ACCOUNT_ID }}".dkr.ecr."${{ secrets.AWS_REGION }}".amazonaws.com/"${{ env.APP_NAME }}":"${{ env.DATE }}"-"${{ github.sha }}"
-
-      - name: Tag image for production (base branch)
+  
+      - name: Add prod and latest tags to images
         if: github.ref == 'refs/heads/base'
         run: |
           MANIFEST=$(aws ecr batch-get-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-ids imageTag=dev --output json | jq -c --join-output '.images[0].imageManifest')
           aws ecr put-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-tag prod --image-manifest "$MANIFEST"
+          aws ecr put-image --registry-id ${{ secrets.AWS_ACCOUNT_ID }} --repository-name ${{ env.APP_NAME }} --image-tag latest --image-manifest "$MANIFEST"
