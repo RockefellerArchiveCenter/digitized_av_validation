@@ -14,6 +14,21 @@ docker build -t digitized_av_validation .
 docker run digitized_av_validation
 ```
 
+## Service Flow
+
+The service processes packages as follows:
+- Validates the package refid
+- Downloads, extracts and validates the Bagit bag for fixity
+- Validates the internal structure of the bag payload directory (see [Expected Package Structure section](#expected-package-structure) below)
+- Validates file characteristics using MediaConch
+- Moves files to destination location
+- Cleans up temporary files
+- Sends a success message to an SNS topic
+
+If errors are encountered during any of the above steps, the service:
+- Cleans up temporary files
+- Sends a failure message to an SNS queue
+
 ## Usage
 
 This repository is intended to be deployed as an ECS Task in AWS infrastructure.
