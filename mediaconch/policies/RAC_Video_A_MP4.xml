@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="2.0"?>
 <policy type="and" name="RAC Standard MP4">
   <tag/>
   <rule name="General/FileExtension is mp4" value="FileExtension" tracktype="General" occurrence="*" operator="=">mp4</rule>
@@ -9,14 +9,14 @@
   <rule name="General/IsStreamable is Yes" value="IsStreamable" tracktype="General" occurrence="*" operator="=">Yes</rule>
   <rule name="Video/Format is AVC" value="Format" tracktype="Video" occurrence="*" operator="=">AVC</rule>
   <rule name="Video/Format_Profile is High" value="Format_Profile" tracktype="Video" occurrence="*" operator="=">High</rule>
-  <rule name="Video/Format_Level is 3.1" value="Format_Level" tracktype="Video" occurrence="*" operator="=">3.1</rule>
+  <rule name="Video/Format_Level is 3" value="Format_Level" tracktype="Video" occurrence="*" operator="=">3</rule>
   <rule name="Video/Format_Settings_CABAC is Yes" value="Format_Settings_CABAC" tracktype="Video" occurrence="*" operator="=">Yes</rule>
   <rule name="Video/Format_Settings_RefFrames is 4" value="Format_Settings_RefFrames" tracktype="Video" occurrence="*" operator="=">4</rule>
   <rule name="Video/CodecID is avc1" value="CodecID" tracktype="Video" occurrence="*" operator="=">avc1</rule>
-  <rule name="Video/Width is 720" value="Width" tracktype="Video" occurrence="*" operator="=">720</rule>
-  <rule name="Video/Height is 486" value="Height" tracktype="Video" occurrence="*" operator="=">486</rule>
-  <rule name="Video/Sampled_Width is 720" value="Sampled_Width" tracktype="Video" occurrence="*" operator="=">720</rule>
-  <rule name="Video/Sampled_Height is 486" value="Sampled_Height" tracktype="Video" occurrence="*" operator="=">486</rule>
+  <rule name="Video/Width is 640" value="Width" tracktype="Video" occurrence="*" operator="=">640</rule>
+  <rule name="Video/Height is 480" value="Height" tracktype="Video" occurrence="*" operator="=">480</rule>
+  <rule name="Video/Sampled_Width is 640" value="Sampled_Width" tracktype="Video" occurrence="*" operator="=">640</rule>
+  <rule name="Video/Sampled_Height is 480" value="Sampled_Height" tracktype="Video" occurrence="*" operator="=">480</rule>
   <rule name="Video/DisplayAspectRatio is greater than or equal to 1.333" value="DisplayAspectRatio" tracktype="Video" occurrence="*" operator="&gt;=">1.333</rule>
   <rule name="Video/Rotation is 0.000" value="Rotation" tracktype="Video" occurrence="*" operator="=">0.000</rule>
   <rule name="Video/FrameRate_Mode is CFR" value="FrameRate_Mode" tracktype="Video" occurrence="*" operator="=">CFR</rule>

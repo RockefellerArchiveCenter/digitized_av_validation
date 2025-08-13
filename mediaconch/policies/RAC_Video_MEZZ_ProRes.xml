@@ -1,5 +1,5 @@
-<?xml version="1.0"?>
-<policy type="and" name="RAC ProRes 422 HQ (Progressive)">
+<?xml version="2.0"?>
+<policy type="and" name="RAC ProRes 422 HQ">
   <tag/>
   <rule name="General/VideoCount is 1" value="VideoCount" tracktype="General" occurrence="*" operator="=">1</rule>
   <rule name="General/AudioCount is at least 1" value="AudioCount" tracktype="General" occurrence="*" operator="&gt;=">1</rule>
@@ -22,7 +22,7 @@
   <rule name="Video/Standard is NTSC" value="Standard" tracktype="Video" occurrence="*" operator="=">NTSC</rule>
   <rule name="Video/ColorSpace is YUV" value="ColorSpace" tracktype="Video" occurrence="*" operator="=">YUV</rule>
   <rule name="Video/ChromaSubsampling is 4:2:2" value="ChromaSubsampling" tracktype="Video" occurrence="*" operator="=">4:2:2</rule>
-  <rule name="Video/ScanType is Interlaced" value="ScanType" tracktype="Video" occurrence="*" operator="=">Progressive</rule>
+  <rule name="Video/ScanType is Interlaced" value="ScanType" tracktype="Video" occurrence="*" operator="=">Interlaced</rule>
   <rule name="Audio/Format is PCM" value="Format" tracktype="Audio" occurrence="*" operator="=">PCM</rule>
   <rule name="Audio/Format_Settings_Endianness is Little" value="Format_Settings_Endianness" tracktype="Audio" occurrence="*" operator="=">Little</rule>
   <rule name="Audio/Format_Settings_Sign is Signed" value="Format_Settings_Sign" tracktype="Audio" occurrence="*" operator="=">Signed</rule>
