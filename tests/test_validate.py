@@ -1,5 +1,6 @@
 import json
 import random
+from os import environ
 from pathlib import Path
 from shutil import copyfile, copytree, rmtree
 from unittest.mock import patch
@@ -98,6 +99,36 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
     mock_extract_bag.assert_called_once_with(download_path)
     mock_download.assert_called_once_with()
     mock_refid.assert_called_once_with(validator.refid)
+
+
+@patch('src.validate.Validator.validate_refid')
+@patch('src.validate.Validator.download_bag')
+@patch('src.validate.Validator.extract_bag')
+@patch('src.validate.Validator.validate_bag')
+@patch('src.validate.Validator.validate_assets')
+@patch('src.validate.Validator.validate_file_formats')
+@patch('src.validate.Validator.move_to_destination')
+@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.deliver_success_notification')
+def test_run_with_skip_format_validation(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
+                                         mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download, mock_refid):
+    """Asserts correct methods are called by run method when SKIP_FILE_FORMAT_VALIDATION env variable is present."""
+    environ['SKIP_FILE_FORMAT_VALIDATION'] = "True"
+    validator = Validator(*DEFAULT_ARGS)
+    extracted_path = Path(validator.tmp_dir, validator.refid)
+    download_path = "foo"
+    mock_download.return_value = download_path
+    validator.run()
+    mock_deliver.assert_called_once_with()
+    mock_cleanup.assert_called_once_with(extracted_path)
+    mock_move.assert_called_once_with(extracted_path)
+    mock_validate_formats.assert_not_called()
+    mock_validate_assets.assert_called_once_with(extracted_path)
+    mock_validate_bag.assert_called_once_with(extracted_path)
+    mock_extract_bag.assert_called_once_with(download_path)
+    mock_download.assert_called_once_with()
+    mock_refid.assert_called_once_with(validator.refid)
+    del environ['SKIP_FILE_FORMAT_VALIDATION']
 
 
 @patch('src.validate.Validator.validate_refid')
