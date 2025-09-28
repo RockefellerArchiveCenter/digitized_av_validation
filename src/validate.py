@@ -1,9 +1,9 @@
 import logging
-import os
 import re
 import subprocess
 import tarfile
 import traceback
+from os import getenv
 from pathlib import Path
 from shutil import copytree, rmtree
 
@@ -12,7 +12,7 @@ import boto3
 from aws_assume_role_lib import assume_role
 
 logging.basicConfig(
-    level=int(os.environ.get('LOGGING_LEVEL', logging.INFO)),
+    level=int(getenv('LOGGING_LEVEL', logging.INFO)),
     format='%(filename)s::%(funcName)s::%(lineno)s %(message)s')
 logging.getLogger("bagit").setLevel(logging.ERROR)
 
@@ -69,7 +69,8 @@ class Validator(object):
             self.extract_bag(downloaded)
             self.validate_bag(extracted)
             self.validate_assets(extracted)
-            self.validate_file_formats(extracted)
+            if not bool(getenv('SKIP_FILE_FORMAT_VALIDATION')):
+                self.validate_file_formats(extracted)
             self.move_to_destination(extracted)
             self.cleanup_binaries(extracted)
             self.deliver_success_notification()
@@ -356,14 +357,14 @@ class Validator(object):
 
 
 if __name__ == '__main__':
-    region = os.environ.get('AWS_REGION')
-    role_arn = os.environ.get('AWS_ROLE_ARN')
-    format = os.environ.get('FORMAT')
-    source_bucket = os.environ.get('AWS_SOURCE_BUCKET')
-    source_filename = os.environ.get('SOURCE_FILENAME')
-    tmp_dir = os.environ.get('TMP_DIR')
-    destination_dir = os.environ.get('DESTINATION_DIR')
-    sns_topic = os.environ.get('AWS_SNS_TOPIC')
+    region = getenv('AWS_REGION')
+    role_arn = getenv('AWS_ROLE_ARN')
+    format = getenv('FORMAT')
+    source_bucket = getenv('AWS_SOURCE_BUCKET')
+    source_filename = getenv('SOURCE_FILENAME')
+    tmp_dir = getenv('TMP_DIR')
+    destination_dir = getenv('DESTINATION_DIR')
+    sns_topic = getenv('AWS_SNS_TOPIC')
 
     logging.debug(
         f'Validator instantiated with arguments: {region} {role_arn} {format} {source_bucket} {destination_dir} {source_filename} {tmp_dir} {sns_topic}')
