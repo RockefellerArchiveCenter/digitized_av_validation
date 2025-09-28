@@ -20,7 +20,7 @@ The service processes packages as follows:
 - Validates the package refid
 - Downloads, extracts and validates the Bagit bag for fixity
 - Validates the internal structure of the bag payload directory (see [Expected Package Structure section](#expected-package-structure) below)
-- Validates file characteristics using MediaConch
+- Validates file characteristics using MediaConch (this step can be skipped by setting the `SKIP_FILE_FORMAT_VALIDATION` to any non-empty value)
 - Moves files to destination location
 - Cleans up temporary files
 - Sends a success message to an SNS topic
