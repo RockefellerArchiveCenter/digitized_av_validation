@@ -1,5 +1,8 @@
 FROM python:3.11-alpine AS base
-RUN apt-get update && apt-get install -y mediaconch
+
+# Install base system requirements
+RUN apk add --no-cache mediaconch
+
 WORKDIR /code
 COPY requirements.txt .
 RUN pip install -r requirements.txt
