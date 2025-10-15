@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm AS base
+FROM python:3.11-alpine AS base
 RUN apt-get update && apt-get install -y mediaconch
 WORKDIR /code
 COPY requirements.txt .
