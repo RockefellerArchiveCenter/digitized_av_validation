@@ -299,7 +299,9 @@ class Validator(object):
         client = self.get_client_with_role('sns', self.role_arn)
         client.publish(
             TopicArn=self.sns_topic,
-            Message=f'{self.format} package {self.source_filename} successfully validated',
+            Message=f'{
+                self.format} package {
+                self.source_filename} successfully validated',
             MessageAttributes={
                 'format': {
                     'DataType': 'String',

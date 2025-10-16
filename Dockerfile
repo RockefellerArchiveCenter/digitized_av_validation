@@ -1,4 +1,4 @@
-FROM python:3.11-alpine AS base
+FROM python:3.12-alpine AS base
 
 # Install base system requirements
 RUN apk add --no-cache mediaconch
