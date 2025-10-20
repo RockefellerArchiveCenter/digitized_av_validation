@@ -2,6 +2,9 @@ FROM python:3.12-alpine AS base
 
 WORKDIR /code
 ENV BUILD_DIR=/code/build
+ENV ZENLIB_VERSION=v0.4.41
+ENV MEDIAINFOLIB_VERSION=v25.09
+ENV MEDIACONCH_VERSION=v25.04
 
 # Create build directory
 RUN mkdir ${BUILD_DIR}
@@ -29,9 +32,9 @@ RUN apk add --no-cache \
 
 # Clone ZenLib, MediaInfoLib and MediaConch_SourceCode
 RUN cd ${BUILD_DIR} && \
-    git clone https://github.com/MediaArea/ZenLib.git && \
-    git clone https://github.com/MediaArea/MediaInfoLib.git && \
-    git clone https://github.com/MediaArea/MediaConch_SourceCode.git
+    git clone --branch ${ZENLIB_VERSION} https://github.com/MediaArea/ZenLib.git && \
+    git clone --branch ${MEDIAINFOLIB_VERSION} https://github.com/MediaArea/MediaInfoLib.git && \
+    git clone --branch ${MEDIACONCH_VERSION} https://github.com/MediaArea/MediaConch_SourceCode.git
 
 # Build ZenLib
 RUN cd ${BUILD_DIR}/ZenLib/Project/GNU/Library && \
