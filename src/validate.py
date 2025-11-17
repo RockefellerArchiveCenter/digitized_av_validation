@@ -5,7 +5,7 @@ import tarfile
 import traceback
 from os import getenv
 from pathlib import Path
-from shutil import copytree, rmtree
+from shutil import rmtree
 
 import bagit
 import boto3
@@ -41,12 +41,12 @@ class Validator(object):
     """Validates digitized audio and moving image assets."""
 
     def __init__(self, region, role_arn, format, source_bucket,
-                 destination_dir, source_filename, tmp_dir, sns_topic):
+                 destination_bucket, source_filename, tmp_dir, sns_topic):
         self.role_arn = role_arn
         self.region = region
         self.format = format
         self.source_bucket = source_bucket
-        self.destination_dir = destination_dir
+        self.destination_bucket = destination_bucket
         self.source_filename = source_filename
         self.refid = Path(source_filename).stem.split('.')[0]
         self.tmp_dir = tmp_dir
@@ -265,19 +265,43 @@ class Validator(object):
         logging.debug(f'All file formats in {bag_path} are valid.')
 
     def move_to_destination(self, bag_path):
-        """"Moves validated assets to destination directory.
+        """"Moves validated assets to destination bucket.
 
         Args:
             bag_path (pathlib.Path): path of bagit Bag containing assets.
         """
-        new_path = Path(self.destination_dir, self.refid)
-        try:
-            copytree(Path(bag_path, 'data'), new_path)
-        except FileExistsError:
+        MIMETYPES = {
+            '.mp3': 'audio/mpeg',
+            '.wav': 'audio/wav',
+            '.mp4': 'video/mp4'
+        }
+        client = self.get_client_with_role('s3', self.role_arn)
+        existing = bool(
+            client.list_objects_v2(
+                Bucket=self.destination_bucket,
+                Prefix=self.refid,
+                MaxKeys=1)['KeyCount'])
+        if existing:
             raise AlreadyExistsError(
                 f'A package with refid {self.refid} is already waiting to be QCed.')
+
+        for dirpath, _, files in (bag_path / 'data').walk():
+            for f in files:
+                source = dirpath / f
+                destination = Path(self.refid, source.relative_to(bag_path / 'data'))
+                suffix = Path(f).suffix
+                try:
+                    file_mime_type = MIMETYPES[suffix]
+                except KeyError:
+                    file_mime_type = 'application/octet-stream'
+                client.upload_file(
+                    str(source),
+                    self.destination_bucket,
+                    str(destination),
+                    ExtraArgs={'ContentType': file_mime_type})
+
         logging.debug(
-            f'All files in payload directory of {bag_path} moved to destination.')
+            f'All files in payload directory of {bag_path} moved to destination bucket {self.destination_bucket}.')
 
     def cleanup_binaries(self, bag_path, job_failed=False):
         """Removes binaries after completion of successful or failed job.
@@ -363,17 +387,17 @@ if __name__ == '__main__':
     source_bucket = getenv('AWS_SOURCE_BUCKET')
     source_filename = getenv('SOURCE_FILENAME')
     tmp_dir = getenv('TMP_DIR')
-    destination_dir = getenv('DESTINATION_DIR')
+    destination_bucket = getenv('DESTINATION_BUCKET')
     sns_topic = getenv('AWS_SNS_TOPIC')
 
     logging.debug(
-        f'Validator instantiated with arguments: {region} {role_arn} {format} {source_bucket} {destination_dir} {source_filename} {tmp_dir} {sns_topic}')
+        f'Validator instantiated with arguments: {region} {role_arn} {format} {source_bucket} {destination_bucket} {source_filename} {tmp_dir} {sns_topic}')
     Validator(
         region,
         role_arn,
         format,
         source_bucket,
-        destination_dir,
+        destination_bucket,
         source_filename,
         tmp_dir,
         sns_topic).run()
