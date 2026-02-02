@@ -2,15 +2,15 @@ aws-assume-role-lib==2.10.0
     # via -r requirements.in
 bagit==1.9.0
     # via -r requirements.in
-boto3==1.42.19
+boto3==1.42.39
     # via
     #   -r requirements.in
     #   aws-assume-role-lib
-botocore==1.42.19
+botocore==1.42.39
     # via
     #   boto3
     #   s3transfer
-jmespath==1.0.1
+jmespath==1.1.0
     # via
     #   boto3
     #   botocore
@@ -20,5 +20,5 @@ s3transfer==0.16.0
     # via boto3
 six==1.17.0
     # via python-dateutil
-urllib3==2.6.2
+urllib3==2.6.3
     # via botocore
