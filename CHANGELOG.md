@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.0...v1.0.1) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** Scheduled dependency updates ([5dd140f](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/5dd140f6e115684f4a7a3d8700fb952fb4a94692))
+* **deps:** Scheduled dependency updates ([1de815a](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/1de815ab82745f12627329f59b74e902824ed0d5))
+* **deps:** Scheduled dependency updates ([23ab468](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/23ab4688742746f72305ce503ee037bdab2ade17))
+* **deps:** Scheduled dependeny updates ([1de815a](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/1de815ab82745f12627329f59b74e902824ed0d5))
+
 ## 1.0.0 (2026-06-18)
 
 
