@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.5](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.4...v1.0.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* update pip ([456c52c](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/456c52c229df279b4732f6099da7bc2e929c79d2))
+* update pip ([456c52c](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/456c52c229df279b4732f6099da7bc2e929c79d2))
+* update pip ([3c9aa19](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/3c9aa198c0b71d29e0208b3e750e6fbafcf20da6))
+* update pip ([3c9aa19](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/3c9aa198c0b71d29e0208b3e750e6fbafcf20da6))
+* update pip ([5a0e879](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/5a0e879fb86bbe7d3716f2720ddc189b3c010a09))
+
 ## [1.0.4](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.3...v1.0.4) (2026-10-05)
 
 
