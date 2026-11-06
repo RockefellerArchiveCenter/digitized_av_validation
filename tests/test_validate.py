@@ -80,7 +80,7 @@ def test_init():
 @patch('src.validate.Validator.validate_assets')
 @patch('src.validate.Validator.validate_file_formats')
 @patch('src.validate.Validator.move_to_destination')
-@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.cleanup_source_binaries')
 @patch('src.validate.Validator.deliver_success_notification')
 def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
              mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download, mock_refid):
@@ -91,7 +91,7 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
     mock_download.return_value = download_path
     validator.run()
     mock_deliver.assert_called_once_with()
-    mock_cleanup.assert_called_once_with(extracted_path)
+    mock_cleanup.assert_not_called()
     mock_move.assert_called_once_with(extracted_path)
     mock_validate_formats.assert_called_once_with(extracted_path)
     mock_validate_assets.assert_called_once_with(extracted_path)
@@ -108,7 +108,7 @@ def test_run(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
 @patch('src.validate.Validator.validate_assets')
 @patch('src.validate.Validator.validate_file_formats')
 @patch('src.validate.Validator.move_to_destination')
-@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.cleanup_source_binaries')
 @patch('src.validate.Validator.deliver_success_notification')
 def test_run_with_skip_format_validation(mock_deliver, mock_cleanup, mock_move, mock_validate_formats,
                                          mock_validate_assets, mock_validate_bag, mock_extract_bag, mock_download, mock_refid):
@@ -120,7 +120,7 @@ def test_run_with_skip_format_validation(mock_deliver, mock_cleanup, mock_move, 
     mock_download.return_value = download_path
     validator.run()
     mock_deliver.assert_called_once_with()
-    mock_cleanup.assert_called_once_with(extracted_path)
+    mock_cleanup.assert_not_called()
     mock_move.assert_called_once_with(extracted_path)
     mock_validate_formats.assert_not_called()
     mock_validate_assets.assert_called_once_with(extracted_path)
@@ -132,7 +132,7 @@ def test_run_with_skip_format_validation(mock_deliver, mock_cleanup, mock_move, 
 
 
 @patch('src.validate.Validator.validate_refid')
-@patch('src.validate.Validator.cleanup_binaries')
+@patch('src.validate.Validator.cleanup_source_binaries')
 @patch('src.validate.Validator.deliver_failure_notification')
 def test_run_with_exception(mock_deliver, mock_cleanup, mock_refid):
     """Asserts run method handles exceptions correctly."""
@@ -140,7 +140,7 @@ def test_run_with_exception(mock_deliver, mock_cleanup, mock_refid):
     exception = Exception("Invalid refid.")
     mock_refid.side_effect = exception
     validator.run()
-    mock_cleanup.assert_called_once()
+    mock_cleanup.assert_called_once_with()
     mock_deliver.assert_called_once_with(exception)
 
 
@@ -372,42 +372,23 @@ def test_move_to_destination_with_exception():
 
 
 @mock_aws
-def test_cleanup_binaries():
+def test_cleanup_source_binaries():
     """Asserts that binaries are cleaned up properly."""
     validator = Validator(*DEFAULT_ARGS)
-    fixture_path = Path(
-        "tests",
-        "fixtures",
-        "b90862f3baceaae3b7418c78f9d50d52")
-    tmp_path = Path(validator.tmp_dir, validator.refid)
     s3 = boto3.client('s3', region_name='us-east-1')
     s3.create_bucket(Bucket=validator.source_bucket)
 
-    copytree(fixture_path, tmp_path)
     s3.put_object(
         Bucket=validator.source_bucket,
         Key=validator.source_filename,
         Body='')
 
-    validator.cleanup_binaries(tmp_path)
-    assert not tmp_path.is_dir()
+    validator.cleanup_source_binaries()
+
     found = s3.list_objects_v2(
         Bucket=validator.source_bucket,
         Prefix=validator.refid)['KeyCount']
     assert found == 0
-
-    copytree(fixture_path, tmp_path)
-    s3.put_object(
-        Bucket=validator.source_bucket,
-        Key=validator.source_filename,
-        Body='')
-
-    validator.cleanup_binaries(tmp_path, job_failed=True)
-    assert not tmp_path.is_dir()
-    found = s3.list_objects_v2(
-        Bucket=validator.source_bucket,
-        Prefix=validator.refid)['KeyCount']
-    assert found == 1
 
 
 @mock_aws
