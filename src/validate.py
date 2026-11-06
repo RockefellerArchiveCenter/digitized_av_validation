@@ -101,16 +101,10 @@ class Validator(object):
         """
         downloaded_path = Path(self.tmp_dir, self.source_filename)
         client = self.get_client_with_role('s3', self.role_arn)
-        transfer_config = boto3.s3.transfer.TransferConfig(
-            multipart_threshold=1024 * 25,
-            max_concurrency=10,
-            multipart_chunksize=1024 * 25,
-            use_threads=True)
         client.download_file(
             self.source_bucket,
             self.source_filename,
-            downloaded_path,
-            Config=transfer_config)
+            downloaded_path)
         logging.debug(f'Package downloaded to {downloaded_path}.')
         return downloaded_path
 
