@@ -5,7 +5,6 @@ import tarfile
 import traceback
 from os import getenv
 from pathlib import Path
-from shutil import rmtree
 
 import bagit
 import boto3
@@ -72,13 +71,12 @@ class Validator(object):
             if not bool(getenv('SKIP_FILE_FORMAT_VALIDATION')):
                 self.validate_file_formats(extracted)
             self.move_to_destination(extracted)
-            self.cleanup_binaries(extracted)
             self.deliver_success_notification()
             logging.info(
                 f'{self.format} package {self.refid} successfully validated.')
         except Exception as e:
             logging.exception(e)
-            self.cleanup_binaries(extracted, job_failed=True)
+            self.cleanup_source_binaries()
             self.deliver_failure_notification(e)
 
     def get_client_with_role(self, resource, role_arn):
@@ -101,16 +99,10 @@ class Validator(object):
         """
         downloaded_path = Path(self.tmp_dir, self.source_filename)
         client = self.get_client_with_role('s3', self.role_arn)
-        transfer_config = boto3.s3.transfer.TransferConfig(
-            multipart_threshold=1024 * 25,
-            max_concurrency=10,
-            multipart_chunksize=1024 * 25,
-            use_threads=True)
         client.download_file(
             self.source_bucket,
             self.source_filename,
-            downloaded_path,
-            Config=transfer_config)
+            downloaded_path)
         logging.debug(f'Package downloaded to {downloaded_path}.')
         return downloaded_path
 
@@ -303,19 +295,12 @@ class Validator(object):
         logging.debug(
             f'All files in payload directory of {bag_path} moved to destination bucket {self.destination_bucket}.')
 
-    def cleanup_binaries(self, bag_path, job_failed=False):
-        """Removes binaries after completion of successful or failed job.
-
-        Args:
-            bag_path (pathlib.Path): path of bagit Bag containing assets.
-        """
+    def cleanup_source_binaries(self):
+        """Removes source binaries after successful job."""
         client = self.get_client_with_role('s3', self.role_arn)
-        if bag_path.is_dir():
-            rmtree(bag_path)
-        if not job_failed:
-            client.delete_object(
-                Bucket=self.source_bucket,
-                Key=self.source_filename)
+        client.delete_object(
+            Bucket=self.source_bucket,
+            Key=self.source_filename)
         logging.debug('Binaries cleaned up.')
 
     def deliver_success_notification(self):
