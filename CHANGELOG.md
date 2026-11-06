@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.7](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.6...v1.0.7) (2026-11-06)
+
+
+### Bug Fixes
+
+* Remove transfer config at unnecessary temporary file removal ([ca6c761](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/ca6c761b73684c1043e1fda481f89cec512c61db))
+* removes TransferConfig and unnecessary temporary file deletion ([68d67b4](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/68d67b462bcf6f3166b82ba4aa506e9c4af7811f))
+
 ## [1.0.6](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.5...v1.0.6) (2026-11-02)
 
 
