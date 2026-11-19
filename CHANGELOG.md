@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.8](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.7...v1.0.8) (2026-11-19)
+
+
+### Bug Fixes
+
+* update deploy ([13ac623](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/13ac623c6d798d24ead48d6fb4455172908226e3))
+* update deploy ([e11a521](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/e11a52142bc413a111f3fbb445402e7e9c83cf14))
+* update deploy ([564e250](https://github.com/RockefellerArchiveCenter/digitized_av_validation/commit/564e2508e3a022f2b3c8c7c70587a9d19c694f77))
+
 ## [1.0.7](https://github.com/RockefellerArchiveCenter/digitized_av_validation/compare/v1.0.6...v1.0.7) (2026-11-06)
 
 
